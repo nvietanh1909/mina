@@ -1,16 +1,20 @@
 name: mina
 
 concurrency:
-  group: $-$
+  group: ${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: true
 
 on:
   push:
     branches:
-      - main
+      - production
+      - develop
+      - 'release/**'
+      - 'hotfix/**'
   pull_request:
     branches:
-      - main
+      - production
+      - develop
 
 jobs:
   semantic-pull-request:
@@ -27,3 +31,36 @@ jobs:
       includes: |
         **/*.md
       modified_files_only: false
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        environment: [develop, staging, production]
+    environment: ${{ matrix.environment }}
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v2
+      
+      - name: Set up Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          flutter-version: 'stable'
+
+      - name: Install dependencies
+        run: flutter pub get
+
+      - name: Build for ${{ matrix.environment }} environment
+        run: flutter build apk --flavor ${{ matrix.environment }} --release
+
+      - name: Deploy to ${{ matrix.environment }}
+        if: github.ref == 'refs/heads/production' || github.ref == 'refs/heads/develop' 
+        run: |
+          if [ "${{ matrix.environment }}" == "develop" ]; then
+            # Deploy to dev server
+          elif [ "${{ matrix.environment }}" == "staging" ]; then
+            # Deploy to staging server
+          else
+            # Deploy to production server
+          fi
