@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'login_screen.dart';
 import 'otp_screen.dart';
+import 'package:mina/theme/color.dart';
 
 class SignUpScreen extends StatefulWidget {
   @override
@@ -20,42 +21,52 @@ class _SignUpScreenState extends State<SignUpScreen> {
         child: Column(
           children: [
             Padding(
-              padding: const EdgeInsets.only(top: 20.0, left: 10.0),
+              padding: const EdgeInsets.only(top: 20.0, left: 0),
               child: Align(
-                alignment: Alignment.topLeft,
-                child: IconButton(
-                  icon: const Icon(Icons.arrow_back, size: 28),
-                  onPressed: () {
-                    Navigator.pushReplacement(
-                      context,
-                      MaterialPageRoute(builder: (context) => LoginScreen()),
-                    );
-                  },
+                alignment: Alignment.centerLeft, // Căn icon về sát trái
+                child: Padding(
+                  padding: const EdgeInsets.only(
+                      top: 10.0), // Để icon không bị sát mép
+                  child: IconButton(
+                    icon: const Icon(Icons.arrow_back, size: 28),
+                    onPressed: () {
+                      Navigator.pushReplacement(
+                        context,
+                        MaterialPageRoute(builder: (context) => LoginScreen()),
+                      );
+                    },
+                  ),
                 ),
               ),
             ),
-
-            const SizedBox(height: 20),
-            const Text(
-              'Create Your Account',
-              style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold),
+            const SizedBox(height: 16),
+            Align(
+              alignment: Alignment.centerLeft,
+              child: Text(
+                'Sign up',
+                style: TextStyle(fontSize: 42, fontWeight: FontWeight.bold),
+              ),
             ),
-
             const SizedBox(height: 10),
-            const Text(
-              'Fill in the details below to sign up.',
-              style: TextStyle(color: Colors.grey),
+            Align(
+              alignment: Alignment.centerLeft,
+              child: Text(
+                'Create an account to continue!',
+                style: TextStyle(color: AppColors.grey),
+              ),
             ),
-
             const SizedBox(height: 20),
-
             Form(
               key: _formKey,
               child: Column(
                 children: [
                   _buildTextField(label: 'First Name', icon: Icons.person),
-                  _buildTextField(label: 'Last Name', icon: Icons.person_outline),
-                  _buildTextField(label: 'Email', icon: Icons.email, keyboardType: TextInputType.emailAddress),
+                  _buildTextField(
+                      label: 'Last Name', icon: Icons.person_outline),
+                  _buildTextField(
+                      label: 'Email',
+                      icon: Icons.email,
+                      keyboardType: TextInputType.emailAddress),
                   _buildPasswordField(
                     label: 'Password',
                     icon: Icons.lock,
@@ -79,9 +90,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
                 ],
               ),
             ),
-
             const SizedBox(height: 20),
-
             SizedBox(
               width: double.infinity,
               child: ElevatedButton(
@@ -103,9 +112,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
                 child: const Text('Sign Up'),
               ),
             ),
-
             const SizedBox(height: 16),
-
             Row(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
@@ -127,7 +134,10 @@ class _SignUpScreenState extends State<SignUpScreen> {
     );
   }
 
-  Widget _buildTextField({required String label, required IconData icon, TextInputType keyboardType = TextInputType.text}) {
+  Widget _buildTextField(
+      {required String label,
+      required IconData icon,
+      TextInputType keyboardType = TextInputType.text}) {
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 8.0),
       child: TextFormField(
@@ -147,7 +157,11 @@ class _SignUpScreenState extends State<SignUpScreen> {
     );
   }
 
-  Widget _buildPasswordField({required String label, required IconData icon, required bool obscureText, required VoidCallback onToggle}) {
+  Widget _buildPasswordField(
+      {required String label,
+      required IconData icon,
+      required bool obscureText,
+      required VoidCallback onToggle}) {
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 8.0),
       child: TextFormField(
