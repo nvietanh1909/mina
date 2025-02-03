@@ -34,17 +34,6 @@ class _TransactionScreenState extends State<TransactionScreen> {
           backgroundColor: const Color.fromARGB(255, 43, 43, 43),
           elevation: 0,
           centerTitle: true,
-          actions: [
-            TextButton(
-              onPressed: () {
-                // Xử lý lưu khi nhấn
-              },
-              child: const Text(
-                'Save', // Hiển thị chữ Save
-                style: TextStyle(color: Colors.blue),
-              ),
-            ),
-          ],
           foregroundColor: Colors.white,
           bottom: const TabBar(
             tabs: [

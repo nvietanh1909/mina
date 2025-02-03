@@ -11,11 +11,48 @@ import 'package:mina/screens/home/transaction/transaction_screen.dart';
 class HomeScreen extends StatelessWidget {
   const HomeScreen({Key? key}) : super(key: key);
 
+  // Hàm giả lập gọi API để lấy dữ liệu (thay thế với API thực tế của bạn)
+  Future<Map<String, dynamic>> fetchBalance() async {
+    // Giả lập một API trả về thông tin balance và transactions
+    await Future.delayed(const Duration(microseconds: 1)); // Giả lập độ trễ
+    return {
+      'totalBalance': 4239.49,
+      'income': 5000.00,
+      'spend': 700.51,
+      'limit': 700.51,
+      'transactions': [
+        {
+          'icon': Icons.payments,
+          'title': 'Payment received',
+          'date': '18 Jun 2022',
+          'amount': '+5000 \$'
+        },
+        {
+          'icon': Icons.music_note,
+          'title': 'Spotify Music',
+          'date': '21 Jun 2022',
+          'amount': '-6.99 \$'
+        },
+        {
+          'icon': Icons.shopping_cart,
+          'title': 'Amazon prime',
+          'date': '21 Jun 2022',
+          'amount': '-500.00 \$'
+        },
+        {
+          'icon': Icons.directions_car,
+          'title': 'Uber',
+          'date': '18 Jun 2022',
+          'amount': '-126 \$'
+        },
+      ]
+    };
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: PreferredSize(
-        // Use PreferredSize to remove AppBar
         preferredSize: Size.zero,
         child: AppBar(
           backgroundColor: Colors.white,
@@ -23,228 +60,244 @@ class HomeScreen extends StatelessWidget {
         ),
       ),
       body: Container(
-        // Add Container to set background color
-        color: Colors.white, // Set the background color to white
+        color: Colors.white,
         child: SingleChildScrollView(
           child: Padding(
             padding: const EdgeInsets.all(16.0),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                // Balance and Summary Box
-                Container(
-                  padding: const EdgeInsets.all(20),
-                  decoration: BoxDecoration(
-                    color: Colors.white,
-                    borderRadius: BorderRadius.circular(10),
-                    boxShadow: [
-                      BoxShadow(
-                        color: Colors.grey.withOpacity(0.4),
-                        spreadRadius: 2,
-                        blurRadius: 8,
-                        offset: const Offset(0, 6),
-                      ),
-                    ],
-                  ),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.center,
-                    children: [
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          const Text(
-                            "Your total balance",
-                            style: TextStyle(
-                              fontSize: 16,
-                              color: Color(0xFF333030),
-                            ),
-                          ),
-                          const Spacer(),
-                          IconButton(
-                            onPressed: () {},
-                            icon: const Icon(
-                              Icons.more_vert,
-                              color: Color(0xFF434343),
-                            ),
-                          ),
-                        ],
-                      ),
-                      const SizedBox(height: 10),
-                      const Text(
-                        "\$ 4,299.49",
-                        style: TextStyle(
-                          fontSize: 28,
-                          fontWeight: FontWeight.bold,
-                          color: Colors.black,
-                        ),
-                      ),
-                      const SizedBox(height: 20),
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        children: [
-                          Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Row(
-                                children: const [
-                                  Icon(
-                                    Icons.arrow_upward,
-                                    color: Colors.green,
-                                  ),
-                                  Text(
-                                    "Income",
-                                    style: TextStyle(
-                                      color: Colors.grey,
-                                    ),
-                                  ),
-                                ],
-                              ),
-                              const Text(
-                                "\$ 5,000.00",
-                                style: TextStyle(fontWeight: FontWeight.w500),
-                              ),
-                            ],
-                          ),
-                          Column(
-                            crossAxisAlignment: CrossAxisAlignment.end,
-                            children: [
-                              Row(
-                                children: const [
-                                  Icon(
-                                    Icons.arrow_downward,
-                                    color: Colors.red,
-                                  ),
-                                  Text(
-                                    "Spend",
-                                    style: TextStyle(
-                                      color: Colors.grey,
-                                    ),
-                                  ),
-                                ],
-                              ),
-                              const Text(
-                                "\$ 700.51",
-                                style: TextStyle(fontWeight: FontWeight.w500),
-                              ),
-                            ],
-                          ),
-                        ],
-                      ),
-                    ],
-                  ),
-                ),
-                const SizedBox(height: 20),
+            child: FutureBuilder<Map<String, dynamic>>(
+              future: fetchBalance(),
+              builder: (context, snapshot) {
+                if (snapshot.connectionState == ConnectionState.waiting) {
+                  return const Center(child: CircularProgressIndicator());
+                }
+                if (snapshot.hasError) {
+                  return Center(child: Text('Error: ${snapshot.error}'));
+                }
+                if (!snapshot.hasData) {
+                  return const Center(child: Text('No data available'));
+                }
 
-                // Spending Limit Box
-                Container(
-                  padding: const EdgeInsets.all(20),
-                  decoration: BoxDecoration(
-                    color: Colors.black,
-                    borderRadius: BorderRadius.circular(10),
-                  ),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.center,
-                    children: [
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          const Text(
-                            "Limit for this month",
-                            style: TextStyle(
-                              fontSize: 16,
-                              color: Colors.white,
-                            ),
-                          ),
-                          const Spacer(),
-                          IconButton(
-                            onPressed: () {},
-                            icon: const Icon(
-                              Icons.more_vert,
-                              color: Colors.white,
-                            ),
+                final balanceData = snapshot.data!;
+                final transactions = balanceData['transactions'];
+
+                return Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    // Balance and Summary Box
+                    Container(
+                      padding: const EdgeInsets.all(20),
+                      decoration: BoxDecoration(
+                        color: Colors.white,
+                        borderRadius: BorderRadius.circular(10),
+                        boxShadow: [
+                          BoxShadow(
+                            color: Colors.grey.withOpacity(0.4),
+                            spreadRadius: 2,
+                            blurRadius: 8,
+                            offset: const Offset(0, 6),
                           ),
                         ],
                       ),
-                      const SizedBox(height: 10),
-                      const Text(
-                        "\$ 700.51",
-                        style: TextStyle(
-                          fontSize: 28,
-                          color: Colors.white,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                      const SizedBox(height: 20),
-                      Column(
+                      child: Column(
                         crossAxisAlignment: CrossAxisAlignment.center,
                         children: [
-                          Container(
-                            width: double.infinity,
-                            height: 10,
-                            decoration: BoxDecoration(
-                              color: Colors.grey,
-                              borderRadius: BorderRadius.circular(5),
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              const Text(
+                                "Your total balance",
+                                style: TextStyle(
+                                  fontSize: 16,
+                                  color: Color(0xFF333030),
+                                ),
+                              ),
+                              const Spacer(),
+                              IconButton(
+                                onPressed: () {},
+                                icon: const Icon(
+                                  Icons.more_vert,
+                                  color: Color(0xFF434343),
+                                ),
+                              ),
+                            ],
+                          ),
+                          const SizedBox(height: 10),
+                          Text(
+                            "\$ ${balanceData['totalBalance']}",
+                            style: const TextStyle(
+                              fontSize: 28,
+                              fontWeight: FontWeight.bold,
+                              color: Colors.black,
                             ),
-                            child: Align(
-                              alignment: Alignment.centerLeft,
-                              child: Container(
-                                width: 170,
-                                height: 10,
-                                decoration: const BoxDecoration(
+                          ),
+                          const SizedBox(height: 20),
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: [
+                              Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Row(
+                                    children: const [
+                                      Icon(
+                                        Icons.arrow_upward,
+                                        color: Colors.green,
+                                      ),
+                                      Text(
+                                        "Income",
+                                        style: TextStyle(
+                                          color: Colors.grey,
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                  Text(
+                                    "\$ ${balanceData['income']}",
+                                    style: const TextStyle(
+                                        fontWeight: FontWeight.w500),
+                                  ),
+                                ],
+                              ),
+                              Column(
+                                crossAxisAlignment: CrossAxisAlignment.end,
+                                children: [
+                                  Row(
+                                    children: const [
+                                      Icon(
+                                        Icons.arrow_downward,
+                                        color: Colors.red,
+                                      ),
+                                      Text(
+                                        "Spend",
+                                        style: TextStyle(
+                                          color: Colors.grey,
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                  Text(
+                                    "\$ ${balanceData['spend']}",
+                                    style: const TextStyle(
+                                        fontWeight: FontWeight.w500),
+                                  ),
+                                ],
+                              ),
+                            ],
+                          ),
+                        ],
+                      ),
+                    ),
+                    const SizedBox(height: 20),
+
+                    // Spending Limit Box
+                    Container(
+                      padding: const EdgeInsets.all(20),
+                      decoration: BoxDecoration(
+                        color: Colors.black,
+                        borderRadius: BorderRadius.circular(10),
+                      ),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.center,
+                        children: [
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              const Text(
+                                "Limit for this month",
+                                style: TextStyle(
+                                  fontSize: 16,
                                   color: Colors.white,
-                                  borderRadius: BorderRadius.only(
-                                    topLeft: Radius.circular(5),
-                                    bottomLeft: Radius.circular(5),
+                                ),
+                              ),
+                              const Spacer(),
+                              IconButton(
+                                onPressed: () {},
+                                icon: const Icon(
+                                  Icons.more_vert,
+                                  color: Colors.white,
+                                ),
+                              ),
+                            ],
+                          ),
+                          const SizedBox(height: 10),
+                          Text(
+                            "\$ ${balanceData['limit']}",
+                            style: const TextStyle(
+                              fontSize: 28,
+                              color: Colors.white,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                          const SizedBox(height: 20),
+                          Column(
+                            crossAxisAlignment: CrossAxisAlignment.center,
+                            children: [
+                              Container(
+                                width: double.infinity,
+                                height: 10,
+                                decoration: BoxDecoration(
+                                  color: Colors.grey,
+                                  borderRadius: BorderRadius.circular(5),
+                                ),
+                                child: Align(
+                                  alignment: Alignment.centerLeft,
+                                  child: Container(
+                                    width: 170,
+                                    height: 10,
+                                    decoration: const BoxDecoration(
+                                      color: Colors.white,
+                                      borderRadius: BorderRadius.only(
+                                        topLeft: Radius.circular(5),
+                                        bottomLeft: Radius.circular(5),
+                                      ),
+                                    ),
                                   ),
                                 ),
                               ),
-                            ),
-                          ),
-                          const SizedBox(height: 5),
-                          const Text(
-                            "700.51 / 1,000.00",
-                            style: TextStyle(color: Colors.white),
+                              const SizedBox(height: 5),
+                              Text(
+                                "${balanceData['limit']} / 1,000.00",
+                                style: const TextStyle(color: Colors.white),
+                              ),
+                            ],
                           ),
                         ],
                       ),
-                    ],
-                  ),
-                ),
-                const SizedBox(height: 20),
+                    ),
+                    const SizedBox(height: 20),
 
-                // Transaction List
-                const Text(
-                  "Income",
-                  style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
-                ),
-                const SizedBox(height: 8),
-                _buildTransactionItem(
-                    icon: Icons.payments,
-                    title: "Payment received",
-                    date: "18 Jun 2022",
-                    amount: "+ 5000 \$"),
-                const SizedBox(height: 16),
-                const Text(
-                  "Expense",
-                  style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
-                ),
-                const SizedBox(height: 8),
-                _buildTransactionItem(
-                    icon: Icons.music_note,
-                    title: "Spotify Music",
-                    date: "21 Jun 2022",
-                    amount: "- 6,99 \$"),
-                _buildTransactionItem(
-                    icon: Icons.shopping_cart,
-                    title: "Amazon prime",
-                    date: "21 Jun 2022",
-                    amount: "-500,00 \$"),
-                _buildTransactionItem(
-                    icon: Icons.directions_car,
-                    title: "Uber",
-                    date: "18 Jun 2022",
-                    amount: "-126 \$"),
-              ],
+                    // Transaction List
+                    const Text(
+                      "Income",
+                      style:
+                          TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+                    ),
+                    const SizedBox(height: 8),
+                    _buildTransactionItem(
+                        icon: Icons.payments,
+                        title: "Payment received",
+                        date: "18 Jun 2022",
+                        amount: "+ 5000 \$"),
+                    const SizedBox(height: 16),
+                    const Text(
+                      "Expense",
+                      style:
+                          TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+                    ),
+                    const SizedBox(height: 8),
+                    ...transactions
+                        .map(
+                          (transaction) => _buildTransactionItem(
+                            icon: transaction['icon'],
+                            title: transaction['title'],
+                            date: transaction['date'],
+                            amount: transaction['amount'],
+                          ),
+                        )
+                        .toList(),
+                  ],
+                );
+              },
             ),
           ),
         ),

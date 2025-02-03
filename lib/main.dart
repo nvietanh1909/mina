@@ -4,13 +4,6 @@ import 'package:mina/services/api_service.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  try {
-    await ApiService.fetchMessage(); 
-    print('API đã được gọi thành công!');
-  } catch (e) {
-    print('Lỗi khi kết nối API: $e');
-  }
-
   runApp(const MyApp());
 }
 
