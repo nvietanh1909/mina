@@ -38,7 +38,8 @@ class _ExpenseScreenState extends State<ExpenseScreen> {
               buildSelectableField('Category', category, () async {
                 final selectedCategory = await Navigator.push(
                   context,
-                  MaterialPageRoute(builder: (context) => const CategoryScreen()),
+                  MaterialPageRoute(
+                      builder: (context) => const CategoryScreen()),
                 );
                 if (selectedCategory != null) {
                   setState(() {
@@ -64,11 +65,43 @@ class _ExpenseScreenState extends State<ExpenseScreen> {
                 // Logic to select repeating
               }),
               buildNotesField('Notes', notesController),
+              const SizedBox(height: 20),
+
+              // Nút Save
+              Row(
+                mainAxisAlignment:
+                    MainAxisAlignment.end, // Align the button to the right
+                children: [
+                  ElevatedButton(
+                    onPressed: () {
+                      // Logic to save the expense
+                      _saveExpense();
+                    },
+                    child: const Text('Save'),
+                    style: ElevatedButton.styleFrom(
+                      foregroundColor: Colors.white,
+                      padding: const EdgeInsets.symmetric(
+                          vertical: 14, horizontal: 32),
+                      backgroundColor: Colors.blue,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(8),
+                      ), // Button style
+                    ),
+                  ),
+                ],
+              ),
             ],
           ),
         ),
       ),
     );
+  }
+
+  void _saveExpense() {
+    // Logic to handle saving the expense
+    // You can validate the input and save it to a database or API
+    print(
+        'Expense saved: ${amountController.text}, $category, $date, $account, $repeating, ${notesController.text}');
   }
 
   Widget buildAmountField() {
@@ -80,9 +113,9 @@ class _ExpenseScreenState extends State<ExpenseScreen> {
           keyboardType: TextInputType.number,
           textAlign: TextAlign.center,
           style: const TextStyle(
-            fontSize: 36, 
-            fontWeight: FontWeight.w500, 
-            height: 1.5,  // Tăng khoảng cách dòng ở đây
+            fontSize: 36,
+            fontWeight: FontWeight.w500,
+            height: 1.5, // Tăng khoảng cách dòng ở đây
           ),
           decoration: const InputDecoration(
             border: InputBorder.none,
@@ -103,12 +136,20 @@ class _ExpenseScreenState extends State<ExpenseScreen> {
             child: Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                Text(label, style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w400, height: 1.5)), // Tăng khoảng cách dòng ở đây
+                Text(label,
+                    style: const TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.w400,
+                        height: 1.5)), // Tăng khoảng cách dòng ở đây
                 Row(
                   children: [
-                    Text(value, style: const TextStyle(color: Colors.grey, height: 1.5)),  // Tăng khoảng cách dòng ở đây
+                    Text(value,
+                        style: const TextStyle(
+                            color: Colors.grey,
+                            height: 1.5)), // Tăng khoảng cách dòng ở đây
                     const SizedBox(width: 5),
-                    const Icon(Icons.arrow_forward_ios, size: 16, color: Colors.grey),
+                    const Icon(Icons.arrow_forward_ios,
+                        size: 16, color: Colors.grey),
                   ],
                 ),
               ],
@@ -116,7 +157,7 @@ class _ExpenseScreenState extends State<ExpenseScreen> {
           ),
         ),
         Container(
-          height: 1.4, 
+          height: 1.4,
           color: const Color(0xFFE1E1E1),
         ),
       ],
@@ -127,7 +168,11 @@ class _ExpenseScreenState extends State<ExpenseScreen> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(label, style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w400, height: 1.5)),  // Tăng khoảng cách dòng ở đây
+        Text(label,
+            style: const TextStyle(
+                fontSize: 16,
+                fontWeight: FontWeight.w400,
+                height: 1.5)), // Tăng khoảng cách dòng ở đây
         const SizedBox(height: 8),
         TextField(
           controller: controller,
@@ -135,7 +180,7 @@ class _ExpenseScreenState extends State<ExpenseScreen> {
             border: UnderlineInputBorder(),
             hintText: 'Enter notes...',
           ),
-          style: const TextStyle(height: 1.5),  // Tăng khoảng cách dòng ở đây
+          style: const TextStyle(height: 1.5), // Tăng khoảng cách dòng ở đây
         ),
         const SizedBox(height: 18),
       ],

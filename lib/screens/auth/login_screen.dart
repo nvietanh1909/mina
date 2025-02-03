@@ -1,12 +1,12 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_svg/svg.dart';
+import 'package:flutter_svg/flutter_svg.dart';
 import 'package:mina/screens/home/home_screen.dart';
 import 'signup_screen.dart';
 import 'package:mina/theme/color.dart';
+import 'package:mina/services/api_service.dart'; // Import ApiService
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
-
   @override
   State<LoginScreen> createState() => _LoginScreenState();
 }
@@ -16,6 +16,8 @@ class _LoginScreenState extends State<LoginScreen> {
   final TextEditingController _passwordController = TextEditingController();
   final _formKey = GlobalKey<FormState>();
   bool _isPasswordVisible = false;
+  bool _isLoading = false;
+  
 
   @override
   Widget build(BuildContext context) {
@@ -30,21 +32,16 @@ class _LoginScreenState extends State<LoginScreen> {
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
                 SvgPicture.asset(
-                  'assets/icons/logo.svg', // Đường dẫn đến file SVG chứa tiêu đề
-                  width: 101, // Điều chỉnh kích thước phù hợp
+                  'assets/icons/logo.svg',
+                  width: 101,
                   height: 50,
                 ),
-
                 const SizedBox(height: 8),
-
-                // Mô tả
                 const Text(
                   'Smart consumption',
                   style: TextStyle(fontSize: 16, color: Colors.grey),
                 ),
-
                 const SizedBox(height: 24),
-
                 // Ô nhập email
                 TextFormField(
                   controller: _emailController,
@@ -66,9 +63,7 @@ class _LoginScreenState extends State<LoginScreen> {
                     return null;
                   },
                 ),
-
                 const SizedBox(height: 16),
-
                 // Ô nhập mật khẩu
                 TextFormField(
                   controller: _passwordController,
@@ -98,9 +93,7 @@ class _LoginScreenState extends State<LoginScreen> {
                     return null;
                   },
                 ),
-
                 const SizedBox(height: 12),
-
                 // Checkbox "Remember me" + Quên mật khẩu
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -119,33 +112,60 @@ class _LoginScreenState extends State<LoginScreen> {
                     ),
                   ],
                 ),
-
                 const SizedBox(height: 16),
-
                 // Nút đăng nhập
                 SizedBox(
                   width: double.infinity,
                   height: 50,
                   child: ElevatedButton(
-                    onPressed: () {
-                      // if (_formKey.currentState!.validate()) {
-                      //   // Xử lý đăng nhập
-                      // }
-                      Navigator.pushReplacement(
-                        context,
-                        MaterialPageRoute(builder: (context) => HomeTab()),
-                      );
-                    },
+                    onPressed: _isLoading
+                        ? null // Vô hiệu hóa nút khi đang tải
+                        : () async {
+                            if (_formKey.currentState!.validate()) {
+                              setState(() {
+                                _isLoading = true;
+                              });
+
+                              try {
+                                // Gọi API đăng nhập
+                                var response = await ApiService().login(
+                                  _emailController.text,
+                                  _passwordController.text,
+                                );
+
+                                // Kiểm tra nếu đăng nhập thành công
+                                if (response != null) {
+                                  Navigator.pushReplacement(
+                                    context,
+                                    MaterialPageRoute(
+                                        builder: (context) => HomeTab()),
+                                  );
+                                } else {
+                                  // Hiển thị lỗi nếu đăng nhập thất bại
+                                  _showErrorDialog('Invalid credentials');
+                                }
+                              } catch (e) {
+                                _showErrorDialog('Failed to login');
+                              } finally {
+                                setState(() {
+                                  _isLoading = false;
+                                });
+                              }
+                            }
+                          },
                     style: ElevatedButton.styleFrom(
                       backgroundColor: const Color(0xFF1D61E7),
                       shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(12)),
                     ),
-                    child: const Text('Log In',
-                        style: TextStyle(fontSize: 16, color: Colors.white)),
+                    child: _isLoading
+                        ? const CircularProgressIndicator(
+                            color: Colors.white,
+                          )
+                        : const Text('Log In',
+                            style: TextStyle(fontSize: 16, color: Colors.white)),
                   ),
                 ),
-
                 const SizedBox(height: 2),
                 // Chuyển đến đăng ký
                 Row(
@@ -169,6 +189,27 @@ class _LoginScreenState extends State<LoginScreen> {
           ),
         ),
       ),
+    );
+  }
+
+  // Hàm hiển thị hộp thoại lỗi
+  void _showErrorDialog(String message) {
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: const Text('Error'),
+          content: Text(message),
+          actions: <Widget>[
+            TextButton(
+              child: const Text('OK'),
+              onPressed: () {
+                Navigator.of(context).pop();
+              },
+            ),
+          ],
+        );
+      },
     );
   }
 }

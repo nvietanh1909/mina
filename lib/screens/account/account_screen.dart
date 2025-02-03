@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'saving_screen.dart';
+import 'package:mina/services/api_service.dart';
 
 class AccountScreen extends StatefulWidget {
   const AccountScreen({super.key});
@@ -23,14 +24,11 @@ class _AccountScreenState extends State<AccountScreen> {
           ),
           title: const Text(
             "Account",
-            style: TextStyle(
-                color: Colors.white,
-                fontWeight: FontWeight.bold), // Đặt màu chữ tiêu đề là trắng
+            style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
           ),
-          backgroundColor:
-              const Color.fromARGB(255, 43, 43, 43), // Màu nền của AppBar
-          elevation: 0, // Bỏ bóng đổ dưới AppBar
-          centerTitle: true, // Căn giữa tiêu đề
+          backgroundColor: const Color.fromARGB(255, 43, 43, 43),
+          elevation: 0,
+          centerTitle: true,
           actions: [
             IconButton(
               icon: const Icon(Icons.notifications_none),
@@ -39,8 +37,7 @@ class _AccountScreenState extends State<AccountScreen> {
               },
             ),
           ],
-          foregroundColor:
-              Colors.white, // Màu của các icon trong AppBar (trắng)
+          foregroundColor: Colors.white,
           bottom: const TabBar(
             tabs: [
               Tab(text: "ACCOUNT"),
@@ -62,8 +59,30 @@ class _AccountScreenState extends State<AccountScreen> {
   }
 }
 
-class AccountTab extends StatelessWidget {
+class AccountTab extends StatefulWidget {
   const AccountTab({super.key});
+
+  @override
+  _AccountTabState createState() => _AccountTabState();
+}
+
+class _AccountTabState extends State<AccountTab> {
+  ApiService apiService = ApiService();
+  late Future<List<dynamic>> budgets;
+
+  @override
+  void initState() {
+    super.initState();
+    // Lấy thông tin budget từ API khi màn hình được tạo
+    _loadBudgets();
+  }
+
+  // Hàm để tải lại dữ liệu từ API
+  void _loadBudgets() {
+    setState(() {
+      budgets = apiService.getBudgets(); // Lấy thông tin từ API
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -74,16 +93,65 @@ class AccountTab extends StatelessWidget {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             const SizedBox(height: 16),
-            const Text(
-              "Total balance: \$ 4,299.49",
-              style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+
+            // Hiển thị danh sách các budget
+            FutureBuilder<List<dynamic>>(
+              future: budgets,
+              builder: (context, snapshot) {
+                if (snapshot.connectionState == ConnectionState.waiting) {
+                  return const Center(child: CircularProgressIndicator());
+                } else if (snapshot.hasError) {
+                  return Center(child: Text('Error: ${snapshot.error}'));
+                } else if (!snapshot.hasData || snapshot.data!.isEmpty) {
+                  return const Center(child: Text('No budgets available'));
+                } else {
+                  List<dynamic> budgetList = snapshot.data!;
+                  return ListView.builder(
+                    shrinkWrap: true,
+                    physics: const NeverScrollableScrollPhysics(),
+                    itemCount: budgetList.length,
+                    itemBuilder: (context, index) {
+                      bool isActive = budgetList[index]['active'] ?? false;
+                      return _buildAccountItem(
+                        icon: Icons.account_balance_wallet,
+                        iconColor: isActive
+                            ? Colors.green
+                            : Colors.red, // Thay đổi màu icon
+                        title: "${budgetList[index]['budgetName']}",
+                        amount: "\$ ${budgetList[index]['balance']}",
+                        status: isActive ? 'Active' : 'Inactive',
+                      );
+                    },
+                  );
+                }
+              },
             ),
-            const SizedBox(height: 16),
-            _buildAccountItem(
-              icon: Icons.account_balance_wallet,
-              iconColor: Colors.brown,
-              title: "Cash",
-              amount: "\$ 4,299.49",
+
+            const SizedBox(height: 8), // Khoảng cách giữa Cash và Add Budget
+
+            // Nút thêm Budget
+            Align(
+              alignment: Alignment.center, // Căn giữa
+              child: ElevatedButton.icon(
+                onPressed: () {
+                  // Xử lý khi nhấn nút Add Budget
+                  // Navigator.push(
+                  //   context,
+                  //   MaterialPageRoute(builder: (context) => AddBudgetScreen()),
+                  // );
+                },
+                icon: const Icon(Icons.add),
+                label: const Text("Add Budget"),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Colors.blue,
+                  foregroundColor: Colors.white,
+                  padding:
+                      const EdgeInsets.symmetric(vertical: 12, horizontal: 16),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                ),
+              ),
             ),
           ],
         ),
@@ -96,6 +164,7 @@ class AccountTab extends StatelessWidget {
     required Color iconColor,
     required String title,
     required String amount,
+    required String status,
   }) {
     return Card(
       child: ListTile(
@@ -115,7 +184,19 @@ class AccountTab extends StatelessWidget {
           title,
           style: const TextStyle(fontWeight: FontWeight.bold),
         ),
-        subtitle: Text(amount),
+        subtitle: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(amount),
+            Text(
+              status,
+              style: TextStyle(
+                color: status == 'Active' ? Colors.green : Colors.red,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+          ],
+        ),
         trailing: IconButton(
           icon: const Icon(Icons.more_vert),
           onPressed: () {

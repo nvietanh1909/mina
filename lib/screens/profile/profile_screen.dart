@@ -154,3 +154,14 @@ class _ProfileScreenState extends State<ProfileScreen> {
     );
   }
 }
+
+
+// Future<void> _logout() async {
+//   SharedPreferences prefs = await SharedPreferences.getInstance();
+//   await prefs.remove('token');
+
+//   Navigator.pushReplacement(
+//     context,
+//     MaterialPageRoute(builder: (context) => LoginScreen()),
+//   );
+// }
