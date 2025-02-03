@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_svg/svg.dart';
+import 'package:flutter_svg/flutter_svg.dart';
 import 'package:pinput/pinput.dart';
 import 'signup_screen.dart';
+import 'package:mina/screens/home/home_screen.dart';
 
 class OtpScreen extends StatefulWidget {
   const OtpScreen({Key? key}) : super(key: key);
@@ -24,9 +25,9 @@ class _OtpScreenState extends State<OtpScreen> {
 
   @override
   Widget build(BuildContext context) {
-    const focusedBorderColor = Color.fromRGBO(23, 171, 144, 1);
+    const focusedBorderColor = Color.fromRGBO(55, 171, 102, 1);
     const fillColor = Color.fromRGBO(243, 246, 249, 0);
-    const borderColor = Color.fromRGBO(23, 171, 144, 0.4);
+    const borderColor = Color(0xFF3366CC);
 
     final defaultPinTheme = PinTheme(
       width: 56,
@@ -58,10 +59,13 @@ class _OtpScreenState extends State<OtpScreen> {
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              // Hình ảnh (thay thế bằng hình ảnh của bạn)
-              SvgPicture.asset(
-                'assets/icons/otp.svg', // Thay bằng đường dẫn đến hình ảnh của bạn
-                height: 200,
+              // Hình ảnh (đẩy lên một chút)
+              Transform.translate(
+                offset: const Offset(0, -10), // Di chuyển lên 10px
+                child: SvgPicture.asset(
+                  'assets/icons/otp.svg', // Thay bằng đường dẫn đến hình ảnh của bạn
+                  height: 200,
+                ),
               ),
               const SizedBox(height: 24),
               const Text(
@@ -120,7 +124,7 @@ class _OtpScreenState extends State<OtpScreen> {
                   ),
                 ),
               ),
-              const SizedBox(height: 32),
+              const SizedBox(height: 12),
               // Nút "Resend Code"
               TextButton(
                 onPressed: () {
@@ -131,15 +135,37 @@ class _OtpScreenState extends State<OtpScreen> {
                   style: TextStyle(color: Colors.blue),
                 ),
               ),
-              const SizedBox(height: 32),
+              const SizedBox(height: 12),
               // Nút "Verify"
-              SizedBox(
-                width: 200,
-                child: ElevatedButton(
-                  onPressed: () {
-                    // Xử lý xác minh mã OTP
-                  },
-                  child: const Text('Verify'),
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 16), // Tạo khoảng cách hai bên
+                child: SizedBox(
+                  width: double.infinity,
+                  height: 48, // Tăng chiều cao để dễ bấm hơn
+                  child: ElevatedButton(
+                    onPressed: () {
+                      Navigator.pushReplacement(
+                        context,
+                        MaterialPageRoute(builder: (context) => HomeTab()),
+                      );
+                    },
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: const Color(0xFF1D61E7),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12), // Bo góc mềm mại
+                      ),
+                      elevation: 6, // Tạo hiệu ứng đổ bóng
+                      shadowColor: Colors.blue.withOpacity(0.3), // Màu bóng nhẹ
+                    ),
+                    child: const Text(
+                      'Verify',
+                      style: TextStyle(
+                        fontSize: 18,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.white,
+                      ),
+                    ),
+                  ),
                 ),
               ),
             ],

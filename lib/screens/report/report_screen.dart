@@ -2,7 +2,7 @@ import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter/material.dart';
 
 class ReportScreen extends StatefulWidget {
-  const ReportScreen({Key? key}): super(key: key);
+  const ReportScreen({Key? key}) : super(key: key);
 
   @override
   State<ReportScreen> createState() => _ReportScreenState();
@@ -46,22 +46,14 @@ class _ReportScreenState extends State<ReportScreen> {
                 height: 200,
                 child: LineChart(
                   LineChartData(
+                    // Customize the chart data and appearance here
                     minX: 0,
                     maxX: 11,
                     minY: 0,
                     maxY: 25,
                     titlesData: FlTitlesData(show: false),
                     borderData: FlBorderData(show: false),
-                    gridData: FlGridData(
-                      show: true,
-                      getDrawingHorizontalLine: (value) {
-                        return FlLine(
-                          color: Colors.grey,
-                          strokeWidth: 1,
-                        );
-                      },
-                      drawVerticalLine: false,
-                    ),
+                    gridData: FlGridData(show: false),
                     lineBarsData: [
                       LineChartBarData(
                         spots: const [
@@ -79,12 +71,9 @@ class _ReportScreenState extends State<ReportScreen> {
                           FlSpot(11, 25),
                         ],
                         isCurved: true,
-                        color: Colors.tealAccent,
-                        barWidth: 2,
                         dotData: FlDotData(show: false),
                         belowBarData: BarAreaData(
                           show: true,
-                          color: Colors.tealAccent.withOpacity(0.5),
                         ),
                       ),
                       LineChartBarData(
@@ -103,12 +92,9 @@ class _ReportScreenState extends State<ReportScreen> {
                           FlSpot(11, 20),
                         ],
                         isCurved: true,
-                        color: Colors.pinkAccent,
-                        barWidth: 2,
                         dotData: FlDotData(show: false),
                         belowBarData: BarAreaData(
                           show: true,
-                          color: Colors.pinkAccent.withOpacity(0.5),
                         ),
                       ),
                     ],
@@ -134,7 +120,7 @@ class _ReportScreenState extends State<ReportScreen> {
                   _buildInfoItem(
                     'Savings',
                     '\$9,100.00',
-                    Colors.yellow!, // Use a darker yellow
+                    Colors.yellowAccent,
                   ),
                 ],
               ),
@@ -163,7 +149,7 @@ class _ReportScreenState extends State<ReportScreen> {
               LinearProgressIndicator(
                 value: 0.25,
                 backgroundColor: Colors.grey,
-                valueColor: AlwaysStoppedAnimation<Color>(Colors.orange!),
+                valueColor: AlwaysStoppedAnimation<Color>(Colors.orange),
               ),
               const SizedBox(height: 10),
               const Text(
@@ -218,8 +204,8 @@ class _ReportScreenState extends State<ReportScreen> {
           // Handle year selection
         },
         style: ElevatedButton.styleFrom(
-          backgroundColor: isSelected? Colors.blue: Colors.grey,
-          foregroundColor: isSelected? Colors.white: Colors.grey,
+          backgroundColor: isSelected ? Colors.blue : Colors.grey,
+          foregroundColor: isSelected ? Colors.white : Colors.grey,
           padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
         ),
         child: Text(year),

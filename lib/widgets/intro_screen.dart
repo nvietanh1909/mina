@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:mina/screens/auth/login_screen.dart';
+
 class IntroScreen extends StatefulWidget {
   const IntroScreen({Key? key}) : super(key: key);
 
@@ -9,34 +10,44 @@ class IntroScreen extends StatefulWidget {
 }
 
 class _IntroScreenState extends State<IntroScreen> with SingleTickerProviderStateMixin {
-  late AnimationController _controller;
-  late Animation<double> _animation;
+  late final AnimationController _controller;
+  late final Animation<double> _scaleAnimation;
+  late final Animation<double> _fadeAnimation;
+
+  static const int animationDuration = 2; // Thời gian animation (giây)
 
   @override
   void initState() {
     super.initState();
 
-    // Animation controller
+    // Khởi tạo animation controller
     _controller = AnimationController(
       vsync: this,
-      duration: const Duration(seconds: 2), // Thời gian animation kéo dài 2 giây
+      duration: const Duration(seconds: animationDuration),
     );
 
-    // Animation để scale logo từ 0 -> 1
-    _animation = Tween<double>(begin: 0.0, end: 1.0).animate(
-      CurvedAnimation(parent: _controller, curve: Curves.easeInOut),
+    // Tạo hiệu ứng scale từ 0 -> 1
+    _scaleAnimation = Tween<double>(begin: 0.0, end: 1.0).animate(
+      CurvedAnimation(parent: _controller, curve: Curves.easeOutBack),
+    );
+
+    // Tạo hiệu ứng fade từ 0 -> 1
+    _fadeAnimation = Tween<double>(begin: 0.0, end: 1.0).animate(
+      CurvedAnimation(parent: _controller, curve: Curves.easeIn),
     );
 
     // Bắt đầu animation
     _controller.forward();
 
-    // Sau 2 giây, chuyển hướng đến màn hình chính
-    Future.delayed(const Duration(seconds: 2), () {
-      Navigator.pushReplacement(
-        context,
-        MaterialPageRoute(builder: (context) => const LoginScreen()),
-      );
-    });
+    // Chuyển màn hình sau khi hoàn thành animation
+    Future.delayed(const Duration(seconds: animationDuration), _navigateToLogin);
+  }
+
+  void _navigateToLogin() {
+    Navigator.pushReplacement(
+      context,
+      MaterialPageRoute(builder: (context) => const LoginScreen()),
+    );
   }
 
   @override
@@ -51,14 +62,17 @@ class _IntroScreenState extends State<IntroScreen> with SingleTickerProviderStat
       backgroundColor: Colors.white,
       body: Center(
         child: AnimatedBuilder(
-          animation: _animation,
+          animation: _controller,
           builder: (context, child) {
-            return Transform.scale(
-              scale: _animation.value, // Điều chỉnh scale của SVG
-              child: SvgPicture.asset(
-                'assets/images/your_svg_file.svg', // Đường dẫn đến file SVG của bạn
-                width: 200, // Chiều rộng của SVG
-                height: 200, // Chiều cao của SVG
+            return Opacity(
+              opacity: _fadeAnimation.value, // Hiệu ứng mờ dần
+              child: Transform.scale(
+                scale: _scaleAnimation.value, // Hiệu ứng scale
+                child: SvgPicture.asset(
+                  'assets/icons/logo.svg',
+                  width: 160,
+                  height: 160,
+                ),
               ),
             );
           },

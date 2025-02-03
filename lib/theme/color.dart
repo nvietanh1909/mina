@@ -7,7 +7,7 @@ class AppColors {
   // Basic Colors
   static const Color white = Color(0xFFFFFFFF);
   static const Color black = Color(0xFF000000);
-  static const Color grey = Color(0xFFB0BEC5);
+  static const Color grey = Color(0xFF6C7278);
 
   // Bright Colors
   static const Color lightBlue = Color(0xFF64B5F6); // Light Blue
@@ -47,7 +47,8 @@ class AppColors {
   static const Color primaryColor = Color(0xFF00B0FF); // Bright Blue
   static const Color secondaryColor = Color(0xFFFF4081); // Bright Pink
   static const Color accentColor = Color(0xFFFFC107); // Amber
-  static const Color backgroundColor = Color(0xFFF1F8E9); // Light Green Background
+  static const Color backgroundColor =
+      Color(0xFFF1F8E9); // Light Green Background
   static const Color errorColor = Color(0xFFF44336); // Red
 
   // Gradient Colors

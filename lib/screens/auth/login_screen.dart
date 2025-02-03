@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_svg/svg.dart';
 import 'package:mina/screens/home/home_screen.dart';
 import 'signup_screen.dart';
+import 'package:mina/theme/color.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -27,10 +29,10 @@ class _LoginScreenState extends State<LoginScreen> {
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                // Tiêu đề
-                const Text(
-                  'Mina!',
-                  style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
+                SvgPicture.asset(
+                  'assets/icons/logo.svg', // Đường dẫn đến file SVG chứa tiêu đề
+                  width: 101, // Điều chỉnh kích thước phù hợp
+                  height: 50,
                 ),
 
                 const SizedBox(height: 8),
@@ -129,12 +131,13 @@ class _LoginScreenState extends State<LoginScreen> {
                       // if (_formKey.currentState!.validate()) {
                       //   // Xử lý đăng nhập
                       // }
-                      Navigator.pushReplacement(context,
+                      Navigator.pushReplacement(
+                        context,
                         MaterialPageRoute(builder: (context) => HomeTab()),
                       );
                     },
                     style: ElevatedButton.styleFrom(
-                      backgroundColor: Colors.blueAccent,
+                      backgroundColor: const Color(0xFF1D61E7),
                       shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(12)),
                     ),
@@ -143,7 +146,7 @@ class _LoginScreenState extends State<LoginScreen> {
                   ),
                 ),
 
-                const SizedBox(height: 16),
+                const SizedBox(height: 2),
                 // Chuyển đến đăng ký
                 Row(
                   mainAxisAlignment: MainAxisAlignment.center,
@@ -151,9 +154,11 @@ class _LoginScreenState extends State<LoginScreen> {
                     const Text("Don't have an account?"),
                     TextButton(
                       onPressed: () {
-                        Navigator.pushReplacement(context,
-                        MaterialPageRoute(builder: (context) => SignUpScreen()),
-                      );
+                        Navigator.pushReplacement(
+                          context,
+                          MaterialPageRoute(
+                              builder: (context) => SignUpScreen()),
+                        );
                       },
                       child: const Text('Sign Up'),
                     ),
