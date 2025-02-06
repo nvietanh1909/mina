@@ -140,7 +140,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                     .logout();
 
                 // Điều hướng về màn hình login
-                Navigator.pop(context); 
+                Navigator.pop(context);
                 Navigator.pushReplacement(
                   context,
                   MaterialPageRoute(builder: (context) => const LoginScreen()),
