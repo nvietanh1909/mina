@@ -41,7 +41,9 @@ dependencies:
   pinput: 
   intl: ^0.20.2
   animated_introduction: ^1.0.3
-
+  provider: ^6.1.2
+  shared_preferences: ^2.5.1
+  
 dev_dependencies:
   flutter_test:
     sdk: flutter

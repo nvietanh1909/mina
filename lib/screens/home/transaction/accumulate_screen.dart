@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:mina/screens/home/date/date_screen.dart';
 import 'package:mina/screens/home/category/category_screen.dart';
+
 class AccumulateScreen extends StatefulWidget {
   const AccumulateScreen({super.key});
 
@@ -39,35 +40,56 @@ class _AccumulateScreenState extends State<AccumulateScreen> {
                   context,
                   MaterialPageRoute(builder: (context) => const DateScreen()),
                 );
-                if (selectedDate!= null) {
+                if (selectedDate != null) {
                   setState(() {
                     date = selectedDate;
                   });
                 }
               }),
               buildSelectableField('To Account', toAccount, () async {
-                // final selectedAccount = await Navigator.push(
-                //   context,
-                //   MaterialPageRoute(builder: (context) => const CategoryScreen()),
-                // );
-                // if (selectedAccount!= null) {
-                //   setState(() {
-                //     toAccount = selectedAccount;
-                //   });
-                // }
+                // Handle account selection
               }),
               buildSelectableField('From Account', fromAccount, () {
-                // Logic to select account (if needed)
+                // Handle account selection
               }),
               buildSelectableField('Repeating', repeating, () {
-                // Logic to select repeating
+                // Handle repeating selection
               }),
               buildNotesField('Notes', notesController),
+              const SizedBox(height: 20),
+
+              // Save Button
+              Row(
+                mainAxisAlignment: MainAxisAlignment.end,
+                children: [
+                  ElevatedButton(
+                    onPressed: () {
+                      _saveAccumulate();
+                    },
+                    child: const Text('Save'),
+                    style: ElevatedButton.styleFrom(
+                      foregroundColor: Colors.white,
+                      padding: const EdgeInsets.symmetric(
+                          vertical: 14, horizontal: 32),
+                      backgroundColor: Colors.blue,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
             ],
           ),
         ),
       ),
     );
+  }
+
+  void _saveAccumulate() {
+    // Handle save logic
+    print(
+        'Accumulate saved: ${amountController.text}, $date, $toAccount, $fromAccount, $repeating, ${notesController.text}');
   }
 
   Widget buildAmountField() {
@@ -98,12 +120,15 @@ class _AccumulateScreenState extends State<AccumulateScreen> {
             child: Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                Text(label, style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w400)),
+                Text(label,
+                    style: const TextStyle(
+                        fontSize: 16, fontWeight: FontWeight.w400)),
                 Row(
                   children: [
                     Text(value, style: const TextStyle(color: Colors.grey)),
                     const SizedBox(width: 5),
-                    const Icon(Icons.arrow_forward_ios, size: 16, color: Colors.grey),
+                    const Icon(Icons.arrow_forward_ios,
+                        size: 16, color: Colors.grey),
                   ],
                 ),
               ],
@@ -122,7 +147,8 @@ class _AccumulateScreenState extends State<AccumulateScreen> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(label, style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w400)),
+        Text(label,
+            style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w400)),
         const SizedBox(height: 8),
         TextField(
           controller: controller,

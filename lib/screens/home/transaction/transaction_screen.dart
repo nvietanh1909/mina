@@ -22,7 +22,7 @@ class _TransactionScreenState extends State<TransactionScreen> {
           leading: IconButton(
             icon: const Icon(Icons.close),
             onPressed: () {
-              Navigator.pop(context); // Quay lại màn hình trước
+              Navigator.pop(context);
             },
           ),
           title: const Text(

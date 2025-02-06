@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'saving_screen.dart';
-import 'package:mina/services/api_service.dart';
 
 class AccountScreen extends StatefulWidget {
   const AccountScreen({super.key});
@@ -67,22 +66,24 @@ class AccountTab extends StatefulWidget {
 }
 
 class _AccountTabState extends State<AccountTab> {
-  ApiService apiService = ApiService();
-  late Future<List<dynamic>> budgets;
-
-  @override
-  void initState() {
-    super.initState();
-    // Lấy thông tin budget từ API khi màn hình được tạo
-    _loadBudgets();
-  }
-
-  // Hàm để tải lại dữ liệu từ API
-  void _loadBudgets() {
-    setState(() {
-      budgets = apiService.getBudgets(); // Lấy thông tin từ API
-    });
-  }
+  // Dữ liệu giả
+  final List<Map<String, dynamic>> walletList = [
+    {
+      'walletName': 'Wallet 1',
+      'balance': 1000,
+      'active': true,
+    },
+    {
+      'walletName': 'Wallet 2',
+      'balance': 500,
+      'active': false,
+    },
+    {
+      'walletName': 'Wallet 3',
+      'balance': 2500,
+      'active': false,
+    },
+  ];
 
   @override
   Widget build(BuildContext context) {
@@ -94,54 +95,39 @@ class _AccountTabState extends State<AccountTab> {
           children: [
             const SizedBox(height: 16),
 
-            // Hiển thị danh sách các budget
-            FutureBuilder<List<dynamic>>(
-              future: budgets,
-              builder: (context, snapshot) {
-                if (snapshot.connectionState == ConnectionState.waiting) {
-                  return const Center(child: CircularProgressIndicator());
-                } else if (snapshot.hasError) {
-                  return Center(child: Text('Error: ${snapshot.error}'));
-                } else if (!snapshot.hasData || snapshot.data!.isEmpty) {
-                  return const Center(child: Text('No budgets available'));
-                } else {
-                  List<dynamic> budgetList = snapshot.data!;
-                  return ListView.builder(
-                    shrinkWrap: true,
-                    physics: const NeverScrollableScrollPhysics(),
-                    itemCount: budgetList.length,
-                    itemBuilder: (context, index) {
-                      bool isActive = budgetList[index]['active'] ?? false;
-                      return _buildAccountItem(
-                        icon: Icons.account_balance_wallet,
-                        iconColor: isActive
-                            ? Colors.green
-                            : Colors.red, // Thay đổi màu icon
-                        title: "${budgetList[index]['budgetName']}",
-                        amount: "\$ ${budgetList[index]['balance']}",
-                        status: isActive ? 'Active' : 'Inactive',
-                      );
-                    },
-                  );
-                }
+            // Hiển thị danh sách các ví
+            ListView.builder(
+              shrinkWrap: true,
+              physics: const NeverScrollableScrollPhysics(),
+              itemCount: walletList.length,
+              itemBuilder: (context, index) {
+                bool isActive = walletList[index]['active'] ?? false;
+                return _buildAccountItem(
+                  icon: Icons.account_balance_wallet,
+                  iconColor:
+                      isActive ? Colors.green : Colors.red, // Thay đổi màu icon
+                  title: "${walletList[index]['walletName']}",
+                  amount: "\$ ${walletList[index]['balance']}",
+                  status: isActive ? 'Active' : 'Inactive',
+                );
               },
             ),
 
-            const SizedBox(height: 8), // Khoảng cách giữa Cash và Add Budget
+            const SizedBox(height: 8), // Khoảng cách giữa Cash và Add Wallet
 
-            // Nút thêm Budget
+            // Nút thêm Wallet
             Align(
               alignment: Alignment.center, // Căn giữa
               child: ElevatedButton.icon(
                 onPressed: () {
-                  // Xử lý khi nhấn nút Add Budget
+                  // Xử lý khi nhấn nút Add Wallet
                   // Navigator.push(
                   //   context,
-                  //   MaterialPageRoute(builder: (context) => AddBudgetScreen()),
+                  //   MaterialPageRoute(builder: (context) => AddWalletScreen()),
                   // );
                 },
                 icon: const Icon(Icons.add),
-                label: const Text("Add Budget"),
+                label: const Text("Add Wallet"),
                 style: ElevatedButton.styleFrom(
                   backgroundColor: Colors.blue,
                   foregroundColor: Colors.white,
