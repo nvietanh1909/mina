@@ -4,7 +4,6 @@ import 'package:mina/screens/home/date/date_screen.dart';
 import 'package:intl/intl.dart';
 
 class IncomeScreen extends StatefulWidget {
-
   const IncomeScreen({super.key});
 
   @override
@@ -39,7 +38,8 @@ class _IncomeScreenState extends State<IncomeScreen> {
               buildSelectableField('Category', category, () async {
                 final selectedCategory = await Navigator.push(
                   context,
-                  MaterialPageRoute(builder: (context) => const CategoryScreen()),
+                  MaterialPageRoute(
+                      builder: (context) => const CategoryScreen()),
                 );
                 if (selectedCategory != null) {
                   setState(() {
@@ -59,17 +59,46 @@ class _IncomeScreenState extends State<IncomeScreen> {
                 }
               }),
               buildSelectableField('Account', account, () {
-                // Logic to select account (if needed)
+                // Logic chọn tài khoản
               }),
               buildSelectableField('Repeating', repeating, () {
-                // Logic to select repeating
+                // Logic chọn kiểu lặp lại
               }),
               buildNotesField('Notes', notesController),
+              const SizedBox(height: 20),
+
+              // Nút Save
+              Row(
+                mainAxisAlignment: MainAxisAlignment.end,
+                children: [
+                  ElevatedButton(
+                    onPressed: () {
+                      _saveIncome();
+                    },
+                    child: const Text('Save'),
+                    style: ElevatedButton.styleFrom(
+                      foregroundColor: Colors.white,
+                      padding: const EdgeInsets.symmetric(
+                          vertical: 14, horizontal: 32),
+                      backgroundColor: Colors.blue,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
             ],
           ),
         ),
       ),
     );
+  }
+
+  void _saveIncome() {
+    // Logic xử lý lưu thu nhập
+    print(
+        'Income saved: ${amountController.text}, $category, $date, $account, $repeating, ${notesController.text}');
   }
 
   Widget buildAmountField() {
@@ -100,12 +129,15 @@ class _IncomeScreenState extends State<IncomeScreen> {
             child: Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                Text(label, style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w400)),
+                Text(label,
+                    style: const TextStyle(
+                        fontSize: 16, fontWeight: FontWeight.w400)),
                 Row(
                   children: [
                     Text(value, style: const TextStyle(color: Colors.grey)),
                     const SizedBox(width: 5),
-                    const Icon(Icons.arrow_forward_ios, size: 16, color: Colors.grey),
+                    const Icon(Icons.arrow_forward_ios,
+                        size: 16, color: Colors.grey),
                   ],
                 ),
               ],
@@ -113,7 +145,7 @@ class _IncomeScreenState extends State<IncomeScreen> {
           ),
         ),
         Container(
-          height: 1.4, 
+          height: 1.4,
           color: const Color(0xFFE1E1E1),
         ),
       ],
@@ -124,7 +156,8 @@ class _IncomeScreenState extends State<IncomeScreen> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(label, style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w400)),
+        Text(label,
+            style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w400)),
         const SizedBox(height: 8),
         TextField(
           controller: controller,

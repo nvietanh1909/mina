@@ -3,10 +3,11 @@ import 'package:flutter_svg/flutter_svg.dart';
 import 'package:mina/screens/home/home_screen.dart';
 import 'signup_screen.dart';
 import 'package:mina/theme/color.dart';
-import 'package:mina/services/api_service.dart'; // Import ApiService
+import 'package:mina/services/api_service.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
+
   @override
   State<LoginScreen> createState() => _LoginScreenState();
 }
@@ -17,7 +18,7 @@ class _LoginScreenState extends State<LoginScreen> {
   final _formKey = GlobalKey<FormState>();
   bool _isPasswordVisible = false;
   bool _isLoading = false;
-  
+  bool _rememberMe = false;
 
   @override
   Widget build(BuildContext context) {
@@ -31,159 +32,21 @@ class _LoginScreenState extends State<LoginScreen> {
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                SvgPicture.asset(
-                  'assets/icons/logo.svg',
-                  width: 101,
-                  height: 50,
-                ),
+                SvgPicture.asset('assets/icons/logo.svg',
+                    width: 101, height: 50),
                 const SizedBox(height: 8),
-                const Text(
-                  'Smart consumption',
-                  style: TextStyle(fontSize: 16, color: Colors.grey),
-                ),
+                const Text('Smart consumption',
+                    style: TextStyle(fontSize: 16, color: Colors.grey)),
                 const SizedBox(height: 24),
-                // Ô nhập email
-                TextFormField(
-                  controller: _emailController,
-                  decoration: InputDecoration(
-                    labelText: 'Email',
-                    prefixIcon: const Icon(Icons.email),
-                    border: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(12)),
-                  ),
-                  keyboardType: TextInputType.emailAddress,
-                  validator: (value) {
-                    if (value == null || value.isEmpty) {
-                      return 'Please enter your email';
-                    } else if (!RegExp(
-                            r"^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,4}$")
-                        .hasMatch(value)) {
-                      return 'Enter a valid email';
-                    }
-                    return null;
-                  },
-                ),
+                _buildEmailField(),
                 const SizedBox(height: 16),
-                // Ô nhập mật khẩu
-                TextFormField(
-                  controller: _passwordController,
-                  obscureText: !_isPasswordVisible,
-                  decoration: InputDecoration(
-                    labelText: 'Password',
-                    prefixIcon: const Icon(Icons.lock),
-                    border: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(12)),
-                    suffixIcon: IconButton(
-                      icon: Icon(_isPasswordVisible
-                          ? Icons.visibility
-                          : Icons.visibility_off),
-                      onPressed: () {
-                        setState(() {
-                          _isPasswordVisible = !_isPasswordVisible;
-                        });
-                      },
-                    ),
-                  ),
-                  validator: (value) {
-                    if (value == null || value.isEmpty) {
-                      return 'Please enter your password';
-                    } else if (value.length < 6) {
-                      return 'Password must be at least 6 characters';
-                    }
-                    return null;
-                  },
-                ),
+                _buildPasswordField(),
                 const SizedBox(height: 12),
-                // Checkbox "Remember me" + Quên mật khẩu
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Row(
-                      children: [
-                        Checkbox(value: false, onChanged: (value) {}),
-                        const Text('Remember me'),
-                      ],
-                    ),
-                    TextButton(
-                      onPressed: () {
-                        // Điều hướng đến trang quên mật khẩu
-                      },
-                      child: const Text('Forgot Password?'),
-                    ),
-                  ],
-                ),
+                _buildRememberMeAndForgotPassword(),
                 const SizedBox(height: 16),
-                // Nút đăng nhập
-                SizedBox(
-                  width: double.infinity,
-                  height: 50,
-                  child: ElevatedButton(
-                    onPressed: _isLoading
-                        ? null // Vô hiệu hóa nút khi đang tải
-                        : () async {
-                            if (_formKey.currentState!.validate()) {
-                              setState(() {
-                                _isLoading = true;
-                              });
-
-                              try {
-                                // Gọi API đăng nhập
-                                var response = await ApiService().login(
-                                  _emailController.text,
-                                  _passwordController.text,
-                                );
-
-                                // Kiểm tra nếu đăng nhập thành công
-                                if (response != null) {
-                                  Navigator.pushReplacement(
-                                    context,
-                                    MaterialPageRoute(
-                                        builder: (context) => HomeTab()),
-                                  );
-                                } else {
-                                  // Hiển thị lỗi nếu đăng nhập thất bại
-                                  _showErrorDialog('Invalid credentials');
-                                }
-                              } catch (e) {
-                                _showErrorDialog('Failed to login');
-                              } finally {
-                                setState(() {
-                                  _isLoading = false;
-                                });
-                              }
-                            }
-                          },
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: const Color(0xFF1D61E7),
-                      shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(12)),
-                    ),
-                    child: _isLoading
-                        ? const CircularProgressIndicator(
-                            color: Colors.white,
-                          )
-                        : const Text('Log In',
-                            style: TextStyle(fontSize: 16, color: Colors.white)),
-                  ),
-                ),
+                _buildLoginButton(),
                 const SizedBox(height: 2),
-                // Chuyển đến đăng ký
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    const Text("Don't have an account?"),
-                    TextButton(
-                      onPressed: () {
-                        Navigator.pushReplacement(
-                          context,
-                          MaterialPageRoute(
-                              builder: (context) => SignUpScreen()),
-                        );
-                      },
-                      child: const Text('Sign Up'),
-                    ),
-                  ],
-                ),
+                _buildSignUpRedirect(),
               ],
             ),
           ),
@@ -192,7 +55,135 @@ class _LoginScreenState extends State<LoginScreen> {
     );
   }
 
-  // Hàm hiển thị hộp thoại lỗi
+  Widget _buildEmailField() {
+    return TextFormField(
+      controller: _emailController,
+      decoration: InputDecoration(
+        labelText: 'Email',
+        prefixIcon: const Icon(Icons.email),
+        border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+      ),
+      keyboardType: TextInputType.emailAddress,
+      validator: (value) {
+        if (value == null || value.isEmpty) {
+          return 'Please enter your email';
+        } else if (!RegExp(r"^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,4}")
+            .hasMatch(value)) {
+          return 'Enter a valid email';
+        }
+        return null;
+      },
+    );
+  }
+
+  Widget _buildPasswordField() {
+    return TextFormField(
+      controller: _passwordController,
+      obscureText: !_isPasswordVisible,
+      decoration: InputDecoration(
+        labelText: 'Password',
+        prefixIcon: const Icon(Icons.lock),
+        border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+        suffixIcon: IconButton(
+          icon: Icon(
+              _isPasswordVisible ? Icons.visibility : Icons.visibility_off),
+          onPressed: () =>
+              setState(() => _isPasswordVisible = !_isPasswordVisible),
+        ),
+      ),
+      validator: (value) {
+        if (value == null || value.isEmpty) {
+          return 'Please enter your password';
+        } else if (value.length < 6) {
+          return 'Password must be at least 6 characters';
+        }
+        return null;
+      },
+    );
+  }
+
+  Widget _buildRememberMeAndForgotPassword() {
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+      children: [
+        Row(
+          children: [
+            Checkbox(
+              value: _rememberMe,
+              onChanged: (value) => setState(() => _rememberMe = true),
+            ),
+            const Text('Remember me'),
+          ],
+        ),
+        TextButton(
+          onPressed: () {},
+          child: const Text('Forgot Password?'),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildLoginButton() {
+    return SizedBox(
+      width: double.infinity,
+      height: 50,
+      child: ElevatedButton(
+        onPressed: _isLoading ? null : _handleLogin,
+        style: ElevatedButton.styleFrom(
+          backgroundColor: const Color(0xFF1D61E7),
+          shape:
+              RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+        ),
+        child: _isLoading
+            ? const CircularProgressIndicator(color: Colors.white)
+            : const Text('Log In',
+                style: TextStyle(fontSize: 16, color: Colors.white)),
+      ),
+    );
+  }
+
+  Widget _buildSignUpRedirect() {
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.center,
+      children: [
+        const Text("Don't have an account?"),
+        TextButton(
+          onPressed: () => Navigator.pushReplacement(
+              context, MaterialPageRoute(builder: (context) => SignUpScreen())),
+          child: const Text('Sign Up'),
+        ),
+      ],
+    );
+  }
+
+  Future<void> _handleLogin() async {
+    if (!_formKey.currentState!.validate()) return;
+
+    setState(() => _isLoading = true);
+
+    try {
+      var response = await ApiService().login(
+        context,
+        _emailController.text,
+        _passwordController.text,
+        _rememberMe,
+      );
+
+      if (response != null) {
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(builder: (context) => HomeTab()),
+        );
+      } else {
+        _showErrorDialog('Invalid credentials');
+      }
+    } catch (e) {
+      _showErrorDialog('Failed to login. Please try again.');
+    } finally {
+      setState(() => _isLoading = false);
+    }
+  }
+
   void _showErrorDialog(String message) {
     showDialog(
       context: context,
@@ -200,12 +191,10 @@ class _LoginScreenState extends State<LoginScreen> {
         return AlertDialog(
           title: const Text('Error'),
           content: Text(message),
-          actions: <Widget>[
+          actions: [
             TextButton(
               child: const Text('OK'),
-              onPressed: () {
-                Navigator.of(context).pop();
-              },
+              onPressed: () => Navigator.of(context).pop(),
             ),
           ],
         );

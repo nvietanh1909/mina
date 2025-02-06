@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:mina/screens/auth/login_screen.dart';
+import 'package:mina/provider/auth_provider.dart';
+import 'package:provider/provider.dart';
 
 class ProfileScreen extends StatefulWidget {
   const ProfileScreen({super.key});
@@ -132,9 +134,13 @@ class _ProfileScreenState extends State<ProfileScreen> {
           content: const Text('Are you sure you want to log out?'),
           actions: <Widget>[
             TextButton(
-              onPressed: () {
-                // Quay về trang login khi xác nhận logout
-                Navigator.pop(context); // Đóng hộp thoại
+              onPressed: () async {
+                // Gọi logout từ AuthProvider
+                await Provider.of<AuthProvider>(context, listen: false)
+                    .logout();
+
+                // Điều hướng về màn hình login
+                Navigator.pop(context); 
                 Navigator.pushReplacement(
                   context,
                   MaterialPageRoute(builder: (context) => const LoginScreen()),
@@ -144,7 +150,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
             ),
             TextButton(
               onPressed: () {
-                Navigator.pop(context); // Đóng hộp thoại
+                Navigator.pop(context);
               },
               child: const Text('No'),
             ),
@@ -154,14 +160,3 @@ class _ProfileScreenState extends State<ProfileScreen> {
     );
   }
 }
-
-
-// Future<void> _logout() async {
-//   SharedPreferences prefs = await SharedPreferences.getInstance();
-//   await prefs.remove('token');
-
-//   Navigator.pushReplacement(
-//     context,
-//     MaterialPageRoute(builder: (context) => LoginScreen()),
-//   );
-// }
