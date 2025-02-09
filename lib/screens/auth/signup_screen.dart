@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'login_screen.dart';
 import 'otp_screen.dart';
 import 'package:mina/theme/color.dart';
+import 'package:mina/services/api_service.dart';
 
 class SignUpScreen extends StatefulWidget {
   @override
@@ -13,6 +14,39 @@ class _SignUpScreenState extends State<SignUpScreen> {
   bool _obscurePassword = true;
   bool _obscureConfirmPassword = true;
 
+  final _firstNameController = TextEditingController();
+  final _lastNameController = TextEditingController();
+  final _emailController = TextEditingController();
+  final _passwordController = TextEditingController();
+  final _confirmPasswordController = TextEditingController();
+
+  final _authService = AuthService();
+  bool _isLoading = false;
+
+  Future<void> _register() async {
+    if (!_formKey.currentState!.validate()) return;
+
+    setState(() => _isLoading = true);
+    try {
+      await _authService.register(
+        _firstNameController.text + " " + _lastNameController.text,
+        _emailController.text,
+        _passwordController.text,
+      );
+
+      Navigator.pushReplacement(
+        context,
+        MaterialPageRoute(builder: (context) => OtpScreen()),
+      );
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(e.toString())),
+      );
+    } finally {
+      setState(() => _isLoading = false);
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -20,23 +54,16 @@ class _SignUpScreenState extends State<SignUpScreen> {
         padding: const EdgeInsets.all(24.0),
         child: Column(
           children: [
-            Padding(
-              padding: const EdgeInsets.only(top: 20.0, left: 0),
-              child: Align(
-                alignment: Alignment.centerLeft, // Căn icon về sát trái
-                child: Padding(
-                  padding: const EdgeInsets.only(
-                      top: 10.0), // Để icon không bị sát mép
-                  child: IconButton(
-                    icon: const Icon(Icons.arrow_back, size: 28),
-                    onPressed: () {
-                      Navigator.pushReplacement(
-                        context,
-                        MaterialPageRoute(builder: (context) => LoginScreen()),
-                      );
-                    },
-                  ),
-                ),
+            Align(
+              alignment: Alignment.centerLeft,
+              child: IconButton(
+                icon: const Icon(Icons.arrow_back, size: 28),
+                onPressed: () {
+                  Navigator.pushReplacement(
+                    context,
+                    MaterialPageRoute(builder: (context) => LoginScreen()),
+                  );
+                },
               ),
             ),
             const SizedBox(height: 16),
@@ -60,31 +87,45 @@ class _SignUpScreenState extends State<SignUpScreen> {
               key: _formKey,
               child: Column(
                 children: [
-                  _buildTextField(label: 'First Name', icon: Icons.person),
                   _buildTextField(
-                      label: 'Last Name', icon: Icons.person_outline),
+                    label: 'First Name',
+                    icon: Icons.person,
+                    controller: _firstNameController,
+                  ),
                   _buildTextField(
-                      label: 'Email',
-                      icon: Icons.email,
-                      keyboardType: TextInputType.emailAddress),
+                    label: 'Last Name',
+                    icon: Icons.person_outline,
+                    controller: _lastNameController,
+                  ),
+                  _buildTextField(
+                    label: 'Email',
+                    icon: Icons.email,
+                    controller: _emailController,
+                    keyboardType: TextInputType.emailAddress,
+                  ),
                   _buildPasswordField(
                     label: 'Password',
                     icon: Icons.lock,
+                    controller: _passwordController,
                     obscureText: _obscurePassword,
                     onToggle: () {
-                      setState(() {
-                        _obscurePassword = !_obscurePassword;
-                      });
+                      setState(() => _obscurePassword = !_obscurePassword);
                     },
                   ),
                   _buildPasswordField(
                     label: 'Confirm Password',
                     icon: Icons.lock_outline,
+                    controller: _confirmPasswordController,
                     obscureText: _obscureConfirmPassword,
                     onToggle: () {
-                      setState(() {
-                        _obscureConfirmPassword = !_obscureConfirmPassword;
-                      });
+                      setState(() =>
+                          _obscureConfirmPassword = !_obscureConfirmPassword);
+                    },
+                    validator: (value) {
+                      if (value != _passwordController.text) {
+                        return 'Passwords do not match';
+                      }
+                      return null;
                     },
                   ),
                 ],
@@ -94,22 +135,16 @@ class _SignUpScreenState extends State<SignUpScreen> {
             SizedBox(
               width: double.infinity,
               child: ElevatedButton(
-                onPressed: () {
-                  if (_formKey.currentState!.validate()) {
-                    // Chuyển sang màn hình OTP
-                    Navigator.pushReplacement(
-                      context,
-                      MaterialPageRoute(builder: (context) => OtpScreen()),
-                    );
-                  }
-                },
+                onPressed: _isLoading ? null : _register,
                 style: ElevatedButton.styleFrom(
                   backgroundColor: Colors.blue,
                   foregroundColor: Colors.white,
                   padding: const EdgeInsets.symmetric(vertical: 14),
                   textStyle: const TextStyle(fontSize: 16),
                 ),
-                child: const Text('Sign Up'),
+                child: _isLoading
+                    ? CircularProgressIndicator(color: Colors.white)
+                    : const Text('Sign Up'),
               ),
             ),
             const SizedBox(height: 16),
@@ -134,13 +169,16 @@ class _SignUpScreenState extends State<SignUpScreen> {
     );
   }
 
-  Widget _buildTextField(
-      {required String label,
-      required IconData icon,
-      TextInputType keyboardType = TextInputType.text}) {
+  Widget _buildTextField({
+    required String label,
+    required IconData icon,
+    required TextEditingController controller,
+    TextInputType keyboardType = TextInputType.text,
+  }) {
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 8.0),
       child: TextFormField(
+        controller: controller,
         decoration: InputDecoration(
           labelText: label,
           prefixIcon: Icon(icon),
@@ -157,14 +195,18 @@ class _SignUpScreenState extends State<SignUpScreen> {
     );
   }
 
-  Widget _buildPasswordField(
-      {required String label,
-      required IconData icon,
-      required bool obscureText,
-      required VoidCallback onToggle}) {
+  Widget _buildPasswordField({
+    required String label,
+    required IconData icon,
+    required TextEditingController controller,
+    required bool obscureText,
+    required VoidCallback onToggle,
+    FormFieldValidator<String>? validator,
+  }) {
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 8.0),
       child: TextFormField(
+        controller: controller,
         decoration: InputDecoration(
           labelText: label,
           prefixIcon: Icon(icon),
@@ -175,12 +217,13 @@ class _SignUpScreenState extends State<SignUpScreen> {
           border: OutlineInputBorder(borderRadius: BorderRadius.circular(10)),
         ),
         obscureText: obscureText,
-        validator: (value) {
-          if (value == null || value.isEmpty) {
-            return 'Please enter your $label';
-          }
-          return null;
-        },
+        validator: validator ??
+            (value) {
+              if (value == null || value.isEmpty) {
+                return 'Please enter your $label';
+              }
+              return null;
+            },
       ),
     );
   }

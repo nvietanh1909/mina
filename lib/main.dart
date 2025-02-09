@@ -9,12 +9,14 @@ import 'package:provider/provider.dart';
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   final authProvider = AuthProvider();
-  await authProvider.loadToken();
+  await authProvider.logout();
 
   runApp(
     MultiProvider(
       providers: [
-        ChangeNotifierProvider(create: (_) => authProvider),
+        ChangeNotifierProvider(
+          create: (_) => AuthProvider()..loadUser(),
+        ),
       ],
       child: MyApp(),
     ),
@@ -28,7 +30,7 @@ class MyApp extends StatelessWidget {
       title: 'Mina',
       home: Consumer<AuthProvider>(
         builder: (context, authProvider, child) {
-          return authProvider.isAuthenticated ? HomeTab() : IntroScreen();
+          return authProvider.isAuthenticated ? HomeTab() : LoginScreen();
         },
       ),
     );

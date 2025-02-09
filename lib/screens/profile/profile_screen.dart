@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:mina/screens/auth/login_screen.dart';
 import 'package:mina/provider/auth_provider.dart';
 import 'package:provider/provider.dart';
+import 'package:mina/services/api_service.dart';
+import 'package:mina/model/user_model.dart';
 
 class ProfileScreen extends StatefulWidget {
   const ProfileScreen({super.key});
@@ -13,12 +15,34 @@ class ProfileScreen extends StatefulWidget {
 class _ProfileScreenState extends State<ProfileScreen> {
   bool _notificationsEnabled = true;
   bool _darkModeEnabled = false;
+  User? _user; 
+  bool _isLoading = true; 
+
+  @override
+  void initState() {
+    super.initState();
+    _fetchProfile();
+  }
+
+  Future<void> _fetchProfile() async {
+    try {
+      final user = await AuthService().getProfile();
+      setState(() {
+        _user = user;
+        _isLoading = false;
+      });
+    } catch (e) {
+      setState(() {
+        _isLoading = false;
+      });
+      print('Lỗi khi lấy profile: $e');
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: PreferredSize(
-        // Use PreferredSize to remove AppBar
         preferredSize: Size.zero,
         child: AppBar(
           backgroundColor: Colors.white,
@@ -26,41 +50,41 @@ class _ProfileScreenState extends State<ProfileScreen> {
         ),
       ),
       body: SingleChildScrollView(
-        // Để tránh tràn màn hình khi nội dung dài
         padding: const EdgeInsets.all(16.0),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // Thông tin người dùng
-            Padding(
-              padding: const EdgeInsets.only(
-                  top: 34.0), // Thêm khoảng cách phía trên
-              child: Row(
-                children: [
-                  const CircleAvatar(
-                    radius: 30,
-                    // Thay thế bằng hình ảnh người dùng (nếu có)
-                    child: Icon(Icons.person, size: 40),
+            // Hiển thị loading hoặc dữ liệu
+            _isLoading
+                ? const Center(
+                    child:
+                        CircularProgressIndicator()) // Hiển thị vòng xoay loading
+                : Padding(
+                    padding: const EdgeInsets.only(top: 34.0),
+                    child: Row(
+                      children: [
+                        const CircleAvatar(
+                          radius: 30,
+                          child: Icon(Icons.person, size: 40),
+                        ),
+                        const SizedBox(width: 16),
+                        Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              _user?.name ?? 'N/A',
+                              style: const TextStyle(
+                                  fontWeight: FontWeight.bold, fontSize: 18),
+                            ),
+                            Text(_user?.email ?? 'N/A'),
+                          ],
+                        ),
+                      ],
+                    ),
                   ),
-                  const SizedBox(width: 16),
-                  Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: const [
-                      Text(
-                        'Viet Anh Nguyen',
-                        style: TextStyle(
-                            fontWeight: FontWeight.bold, fontSize: 18),
-                      ),
-                      Text('mina@gmail.com'),
-                    ],
-                  ),
-                ],
-              ),
-            ),
 
-            const SizedBox(height: 30), // Đẩy nội dung xuống dưới
+            const SizedBox(height: 30),
 
-            // Các mục cài đặt
             _buildSettingRow(
               title: 'Notifications',
               trailing: Switch(
@@ -106,7 +130,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
     );
   }
 
-  // Widget tạo một hàng cài đặt
   Widget _buildSettingRow(
       {required String title, required Widget trailing, Function()? onTap}) {
     return Padding(
@@ -124,7 +147,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
     );
   }
 
-  // Hiển thị hộp thoại xác nhận khi bấm logout
   void _showLogoutDialog(BuildContext context) {
     showDialog(
       context: context,
@@ -135,11 +157,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
           actions: <Widget>[
             TextButton(
               onPressed: () async {
-                // Gọi logout từ AuthProvider
                 await Provider.of<AuthProvider>(context, listen: false)
                     .logout();
-
-                // Điều hướng về màn hình login
                 Navigator.pop(context);
                 Navigator.pushReplacement(
                   context,

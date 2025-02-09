@@ -16,9 +16,32 @@ class _LoginScreenState extends State<LoginScreen> {
   final TextEditingController _emailController = TextEditingController();
   final TextEditingController _passwordController = TextEditingController();
   final _formKey = GlobalKey<FormState>();
+  final _authService = AuthService();
   bool _isPasswordVisible = false;
   bool _isLoading = false;
   bool _rememberMe = false;
+
+  Future<void> _login() async {
+    if (_formKey.currentState!.validate()) {
+      setState(() => _isLoading = true);
+      try {
+        await _authService.login(
+          _emailController.text,
+          _passwordController.text,
+        );
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(builder: (context) => HomeTab()),
+        );
+      } catch (e) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(e.toString())),
+        );
+      } finally {
+        setState(() => _isLoading = false);
+      }
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -128,7 +151,7 @@ class _LoginScreenState extends State<LoginScreen> {
       width: double.infinity,
       height: 50,
       child: ElevatedButton(
-        onPressed: _isLoading ? null : _handleLogin,
+        onPressed: _isLoading ? null : _login,
         style: ElevatedButton.styleFrom(
           backgroundColor: const Color(0xFF1D61E7),
           shape:
@@ -154,34 +177,6 @@ class _LoginScreenState extends State<LoginScreen> {
         ),
       ],
     );
-  }
-
-  Future<void> _handleLogin() async {
-    if (!_formKey.currentState!.validate()) return;
-
-    setState(() => _isLoading = true);
-
-    try {
-      var response = await ApiService().login(
-        context,
-        _emailController.text,
-        _passwordController.text,
-        _rememberMe,
-      );
-
-      if (response != null) {
-        Navigator.pushReplacement(
-          context,
-          MaterialPageRoute(builder: (context) => HomeTab()),
-        );
-      } else {
-        _showErrorDialog('Invalid credentials');
-      }
-    } catch (e) {
-      _showErrorDialog('Failed to login. Please try again.');
-    } finally {
-      setState(() => _isLoading = false);
-    }
   }
 
   void _showErrorDialog(String message) {

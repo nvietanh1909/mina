@@ -7,14 +7,14 @@ import 'package:mina/screens/camera/camera_screen.dart';
 import 'package:mina/screens/profile/profile_screen.dart';
 import 'package:mina/screens/report/report_screen.dart';
 import 'package:mina/screens/home/transaction/transaction_screen.dart';
+import 'package:mina/provider/wallet_provider.dart';
+import 'package:provider/provider.dart';
 
 class HomeScreen extends StatelessWidget {
   const HomeScreen({Key? key}) : super(key: key);
 
-  // Hàm giả lập gọi API để lấy dữ liệu (thay thế với API thực tế của bạn)
   Future<Map<String, dynamic>> fetchBalance() async {
-    // Giả lập một API trả về thông tin balance và transactions
-    await Future.delayed(const Duration(microseconds: 1)); // Giả lập độ trễ
+    await Future.delayed(const Duration(microseconds: 1));
     return {
       'totalBalance': 4239.49,
       'income': 5000.00,
@@ -341,7 +341,7 @@ class HomeTab extends StatefulWidget {
 class _HomeTabState extends State<HomeTab> {
   int _currentIndex = 0;
 
-  final List<Widget> _screens = const [
+  final List<Widget> _screens = [
     HomeScreen(),
     AccountScreen(),
     CameraScreen(),
