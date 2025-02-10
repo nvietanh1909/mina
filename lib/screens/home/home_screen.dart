@@ -11,9 +11,7 @@ import 'package:mina/screens/home/transaction/transaction_screen.dart';
 class HomeScreen extends StatelessWidget {
   const HomeScreen({Key? key}) : super(key: key);
 
-  // Hàm giả lập gọi API để lấy dữ liệu (thay thế với API thực tế của bạn)
   Future<Map<String, dynamic>> fetchBalance() async {
-    // Giả lập một API trả về thông tin balance và transactions
     await Future.delayed(const Duration(microseconds: 1)); // Giả lập độ trễ
     return {
       'totalBalance': 4239.49,
@@ -515,7 +513,7 @@ class _HomeTabState extends State<HomeTab> {
                     height: 56,
                     decoration: BoxDecoration(
                       shape: BoxShape.circle,
-                      color: Colors.blue, // Màu xanh nước biển
+                      color: Colors.blue, 
                     ),
                     child: const Icon(
                       Icons.add,
