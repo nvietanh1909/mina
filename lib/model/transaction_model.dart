@@ -1,69 +1,60 @@
 class Transaction {
   final String? id;
-  final String? userId;
-  final String? walletId;
   final double amount;
-  final String type;
   final String category;
   final DateTime date;
+  final String type;
   final String? notes;
-  final String? walletName;
-  final String? categoryName;
-  final String? categoryIcon;
 
   Transaction({
     this.id,
-    this.userId,
-    required this.walletId,
     required this.amount,
-    required this.type,
     required this.category,
     required this.date,
-    this.notes = "",
-    this.walletName,
-    this.categoryName,
-    this.categoryIcon,
+    required this.type,
+    this.notes,
   });
 
   factory Transaction.fromJson(Map<String, dynamic> json) {
-    try {
-      print('Parsing transaction JSON: $json'); // Debug log
-
-      return Transaction(
-        id: json['_id'].toString(),
-        userId: json['userId'].toString(),
-        walletId: json['walletId'] is Map
-            ? json['walletId']['_id'].toString()
-            : json['walletId'].toString(),
-        amount: (json['amount'] is int)
-            ? json['amount'].toDouble()
-            : (json['amount'] ?? 0).toDouble(),
-        notes: json['notes'] ?? '',
-        category: json['category'] is Map
-            ? json['category']['_id'].toString()
-            : json['category'].toString(),
-        date: json['date'] != null
-            ? DateTime.parse(json['date'])
-            : DateTime.now(),
-        type: json['type'] ?? '',
-        walletName: json['walletId'] is Map ? json['walletId']['name'] : null,
-        categoryName: json['category'] is Map ? json['category']['name'] : null,
-        categoryIcon: json['category'] is Map ? json['category']['icon'] : null,
-      );
-    } catch (e) {
-      print('Error parsing transaction: $e');
-      rethrow;
-    }
+    return Transaction(
+      id: json['_id'],
+      amount: (json['amount'] as num).toDouble(),
+      category: json['category'],
+      date: DateTime.parse(json['date']),
+      type: json['type'],
+      notes: json['notes'],
+    );
   }
 
   Map<String, dynamic> toJson() {
     return {
-      'walletId': walletId,
+      if (id != null) '_id': id,
       'amount': amount,
-      'notes': notes,
       'category': category,
       'date': date.toIso8601String(),
       'type': type,
+      if (notes != null) 'notes': notes,
     };
   }
+
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      other is Transaction &&
+          runtimeType == other.runtimeType &&
+          id == other.id &&
+          amount == other.amount &&
+          category == other.category &&
+          date == other.date &&
+          type == other.type &&
+          notes == other.notes;
+
+  @override
+  int get hashCode =>
+      id.hashCode ^
+      amount.hashCode ^
+      category.hashCode ^
+      date.hashCode ^
+      type.hashCode ^
+      notes.hashCode;
 }

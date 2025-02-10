@@ -1,50 +1,80 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/svg.dart';
-import 'package:mina/theme/color.dart';
+import 'package:mina/model/transaction_model.dart';
 import 'package:mina/screens/account/account_screen.dart';
 import 'package:mina/screens/camera/camera_screen.dart';
+import 'package:mina/screens/home/transaction/transaction_screen.dart';
 import 'package:mina/screens/profile/profile_screen.dart';
 import 'package:mina/screens/report/report_screen.dart';
-import 'package:mina/screens/home/transaction/transaction_screen.dart';
+import 'package:mina/theme/color.dart';
+import 'package:provider/provider.dart';
+import 'package:mina/provider/wallet_provider.dart';
+import 'package:mina/provider/transaction_provider.dart';
+import 'package:intl/intl.dart';
 
-class HomeScreen extends StatelessWidget {
+class HomeScreen extends StatefulWidget {
   const HomeScreen({Key? key}) : super(key: key);
 
-  Future<Map<String, dynamic>> fetchBalance() async {
-    await Future.delayed(const Duration(microseconds: 1)); // Giả lập độ trễ
-    return {
-      'totalBalance': 4239.49,
-      'income': 5000.00,
-      'spend': 700.51,
-      'limit': 700.51,
-      'transactions': [
-        {
-          'icon': Icons.payments,
-          'title': 'Payment received',
-          'date': '18 Jun 2022',
-          'amount': '+5000 \$'
-        },
-        {
-          'icon': Icons.music_note,
-          'title': 'Spotify Music',
-          'date': '21 Jun 2022',
-          'amount': '-6.99 \$'
-        },
-        {
-          'icon': Icons.shopping_cart,
-          'title': 'Amazon prime',
-          'date': '21 Jun 2022',
-          'amount': '-500.00 \$'
-        },
-        {
-          'icon': Icons.directions_car,
-          'title': 'Uber',
-          'date': '18 Jun 2022',
-          'amount': '-126 \$'
-        },
-      ]
-    };
+  @override
+  State<HomeScreen> createState() => _HomeScreenState();
+}
+
+class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
+  bool _isLoading = true;
+
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addObserver(this);
+    _loadInitialData();
+  }
+
+  @override
+  void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
+    super.dispose();
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state == AppLifecycleState.resumed) {
+      _loadInitialData();
+    }
+  }
+
+  Future<void> _loadInitialData() async {
+    try {
+      setState(() => _isLoading = true);
+      await _loadData();
+    } finally {
+      if (mounted) {
+        setState(() => _isLoading = false);
+      }
+    }
+  }
+
+  Future<void> _loadData() async {
+    try {
+      print('HomeScreen: Loading data...');
+      // Đảm bảo providers được khởi tạo
+      final transactionProvider =
+          Provider.of<TransactionProvider>(context, listen: false);
+      final walletProvider =
+          Provider.of<WalletProvider>(context, listen: false);
+
+      await Future.wait([
+        walletProvider.loadWallets(),
+        transactionProvider.fetchTransactions()
+      ]);
+
+      // Log kết quả
+      print('Wallets loaded: ${walletProvider.wallets.length}');
+      print('Transactions loaded: ${transactionProvider.transactions.length}');
+    } catch (e) {
+      print('Error loading data: $e');
+      rethrow;
+    }
   }
 
   @override
@@ -57,249 +87,227 @@ class HomeScreen extends StatelessWidget {
           elevation: 0,
         ),
       ),
-      body: Container(
+      body: RefreshIndicator(
+        onRefresh: _loadData,
+        child: _isLoading
+            ? const Center(child: CircularProgressIndicator())
+            : Consumer2<WalletProvider, TransactionProvider>(
+                builder: (context, walletProvider, transactionProvider, child) {
+                  // Tính toán các số liệu thống kê
+                  final totalBalance = walletProvider.wallets.fold<double>(
+                    0,
+                    (sum, wallet) => sum + wallet.balance,
+                  );
+
+                  final incomeTransactions = transactionProvider.transactions
+                      .where((t) => t.type == 'income')
+                      .toList();
+
+                  final expenseTransactions = transactionProvider.transactions
+                      .where((t) => t.type == 'expense')
+                      .toList();
+
+                  final income = incomeTransactions.fold<double>(
+                    0,
+                    (sum, t) => sum + t.amount,
+                  );
+
+                  final expense = expenseTransactions.fold<double>(
+                    0,
+                    (sum, t) => sum + t.amount,
+                  );
+
+                  print('Total balance: $totalBalance');
+                  print('Total income: $income');
+                  print('Total expense: $expense');
+
+                  return SingleChildScrollView(
+                    physics: const AlwaysScrollableScrollPhysics(),
+                    child: Padding(
+                      padding: const EdgeInsets.all(16.0),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          _buildBalanceCard(totalBalance, income, expense),
+                          const SizedBox(height: 20),
+                          _buildLimitCard(expense),
+                          const SizedBox(height: 20),
+                          _buildTransactionsList(
+                            incomeTransactions,
+                            expenseTransactions,
+                          ),
+                        ],
+                      ),
+                    ),
+                  );
+                },
+              ),
+      ),
+    );
+  }
+
+  Widget _buildBalanceCard(double totalBalance, double income, double expense) {
+    return Container(
+      padding: const EdgeInsets.symmetric(vertical: 30, horizontal: 20),
+      decoration: BoxDecoration(
         color: Colors.white,
-        child: SingleChildScrollView(
-          child: Padding(
-            padding: const EdgeInsets.all(16.0),
-            child: FutureBuilder<Map<String, dynamic>>(
-              future: fetchBalance(),
-              builder: (context, snapshot) {
-                if (snapshot.connectionState == ConnectionState.waiting) {
-                  return const Center(child: CircularProgressIndicator());
-                }
-                if (snapshot.hasError) {
-                  return Center(child: Text('Error: ${snapshot.error}'));
-                }
-                if (!snapshot.hasData) {
-                  return const Center(child: Text('No data available'));
-                }
-
-                final balanceData = snapshot.data!;
-                final transactions = balanceData['transactions'];
-
-                return Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    // Balance and Summary Box
-                    Container(
-                      padding: const EdgeInsets.all(20),
-                      decoration: BoxDecoration(
-                        color: Colors.white,
-                        borderRadius: BorderRadius.circular(10),
-                        boxShadow: [
-                          BoxShadow(
-                            color: Colors.grey.withOpacity(0.4),
-                            spreadRadius: 2,
-                            blurRadius: 8,
-                            offset: const Offset(0, 6),
-                          ),
-                        ],
-                      ),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.center,
-                        children: [
-                          Row(
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            children: [
-                              const Text(
-                                "Your total balance",
-                                style: TextStyle(
-                                  fontSize: 16,
-                                  color: Color(0xFF333030),
-                                ),
-                              ),
-                              const Spacer(),
-                              IconButton(
-                                onPressed: () {},
-                                icon: const Icon(
-                                  Icons.more_vert,
-                                  color: Color(0xFF434343),
-                                ),
-                              ),
-                            ],
-                          ),
-                          const SizedBox(height: 10),
-                          Text(
-                            "\$ ${balanceData['totalBalance']}",
-                            style: const TextStyle(
-                              fontSize: 28,
-                              fontWeight: FontWeight.bold,
-                              color: Colors.black,
-                            ),
-                          ),
-                          const SizedBox(height: 20),
-                          Row(
-                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                            children: [
-                              Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  Row(
-                                    children: const [
-                                      Icon(
-                                        Icons.arrow_upward,
-                                        color: Colors.green,
-                                      ),
-                                      Text(
-                                        "Income",
-                                        style: TextStyle(
-                                          color: Colors.grey,
-                                        ),
-                                      ),
-                                    ],
-                                  ),
-                                  Text(
-                                    "\$ ${balanceData['income']}",
-                                    style: const TextStyle(
-                                        fontWeight: FontWeight.w500),
-                                  ),
-                                ],
-                              ),
-                              Column(
-                                crossAxisAlignment: CrossAxisAlignment.end,
-                                children: [
-                                  Row(
-                                    children: const [
-                                      Icon(
-                                        Icons.arrow_downward,
-                                        color: Colors.red,
-                                      ),
-                                      Text(
-                                        "Spend",
-                                        style: TextStyle(
-                                          color: Colors.grey,
-                                        ),
-                                      ),
-                                    ],
-                                  ),
-                                  Text(
-                                    "\$ ${balanceData['spend']}",
-                                    style: const TextStyle(
-                                        fontWeight: FontWeight.w500),
-                                  ),
-                                ],
-                              ),
-                            ],
-                          ),
-                        ],
-                      ),
-                    ),
-                    const SizedBox(height: 20),
-
-                    // Spending Limit Box
-                    Container(
-                      padding: const EdgeInsets.all(20),
-                      decoration: BoxDecoration(
-                        color: Colors.black,
-                        borderRadius: BorderRadius.circular(10),
-                      ),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.center,
-                        children: [
-                          Row(
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            children: [
-                              const Text(
-                                "Limit for this month",
-                                style: TextStyle(
-                                  fontSize: 16,
-                                  color: Colors.white,
-                                ),
-                              ),
-                              const Spacer(),
-                              IconButton(
-                                onPressed: () {},
-                                icon: const Icon(
-                                  Icons.more_vert,
-                                  color: Colors.white,
-                                ),
-                              ),
-                            ],
-                          ),
-                          const SizedBox(height: 10),
-                          Text(
-                            "\$ ${balanceData['limit']}",
-                            style: const TextStyle(
-                              fontSize: 28,
-                              color: Colors.white,
-                              fontWeight: FontWeight.bold,
-                            ),
-                          ),
-                          const SizedBox(height: 20),
-                          Column(
-                            crossAxisAlignment: CrossAxisAlignment.center,
-                            children: [
-                              Container(
-                                width: double.infinity,
-                                height: 10,
-                                decoration: BoxDecoration(
-                                  color: Colors.grey,
-                                  borderRadius: BorderRadius.circular(5),
-                                ),
-                                child: Align(
-                                  alignment: Alignment.centerLeft,
-                                  child: Container(
-                                    width: 170,
-                                    height: 10,
-                                    decoration: const BoxDecoration(
-                                      color: Colors.white,
-                                      borderRadius: BorderRadius.only(
-                                        topLeft: Radius.circular(5),
-                                        bottomLeft: Radius.circular(5),
-                                      ),
-                                    ),
-                                  ),
-                                ),
-                              ),
-                              const SizedBox(height: 5),
-                              Text(
-                                "${balanceData['limit']} / 1,000.00",
-                                style: const TextStyle(color: Colors.white),
-                              ),
-                            ],
-                          ),
-                        ],
-                      ),
-                    ),
-                    const SizedBox(height: 20),
-
-                    // Transaction List
-                    const Text(
-                      "Income",
-                      style:
-                          TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
-                    ),
-                    const SizedBox(height: 8),
-                    _buildTransactionItem(
-                        icon: Icons.payments,
-                        title: "Payment received",
-                        date: "18 Jun 2022",
-                        amount: "+ 5000 \$"),
-                    const SizedBox(height: 16),
-                    const Text(
-                      "Expense",
-                      style:
-                          TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
-                    ),
-                    const SizedBox(height: 8),
-                    ...transactions
-                        .map(
-                          (transaction) => _buildTransactionItem(
-                            icon: transaction['icon'],
-                            title: transaction['title'],
-                            date: transaction['date'],
-                            amount: transaction['amount'],
-                          ),
-                        )
-                        .toList(),
-                  ],
-                );
-              },
+        borderRadius: BorderRadius.circular(10),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.grey.withOpacity(0.4),
+            spreadRadius: 2,
+            blurRadius: 8,
+            offset: const Offset(0, 6),
+          ),
+        ],
+      ),
+      child: Column(
+        children: [
+          const Text(
+            "Your total balance",
+            style: TextStyle(
+              fontSize: 16,
+              color: Colors.grey,
             ),
           ),
-        ),
+          const SizedBox(height: 10),
+          Text(
+            "\$ ${totalBalance.toStringAsFixed(2)}",
+            style: const TextStyle(
+              fontSize: 28,
+              fontWeight: FontWeight.bold,
+            ),
+          ),
+          const SizedBox(height: 20),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              _buildBalanceItem(
+                  "Income", income, Colors.green, Icons.arrow_upward),
+              _buildBalanceItem(
+                  "Spend", expense, Colors.red, Icons.arrow_downward),
+            ],
+          ),
+        ],
       ),
+    );
+  }
+
+  Widget _buildBalanceItem(
+      String title, double amount, Color color, IconData icon) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Row(
+          children: [
+            Icon(icon, color: color),
+            const SizedBox(width: 4),
+            Text(title, style: const TextStyle(color: Colors.grey)),
+          ],
+        ),
+        Text(
+          "\$ ${amount.toStringAsFixed(2)}",
+          style: const TextStyle(fontWeight: FontWeight.w500),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildLimitCard(double expense) {
+    const monthlyLimit = 1000.0;
+    final limitProgress = (expense / monthlyLimit).clamp(0.0, 1.0);
+
+    return Container(
+      padding: const EdgeInsets.symmetric(vertical: 30, horizontal: 20),
+      decoration: BoxDecoration(
+        color: Colors.black,
+        borderRadius: BorderRadius.circular(10),
+      ),
+      child: Column(
+        children: [
+          const Text(
+            "Limit for this month",
+            style: TextStyle(
+              fontSize: 16,
+              color: Colors.white70,
+            ),
+          ),
+          const SizedBox(height: 10),
+          Text(
+            "\$ ${expense.toStringAsFixed(2)}",
+            style: const TextStyle(
+              fontSize: 28,
+              color: Colors.white,
+              fontWeight: FontWeight.bold,
+            ),
+          ),
+          const SizedBox(height: 20),
+          LinearProgressIndicator(
+            value: limitProgress,
+            backgroundColor: Colors.grey,
+            valueColor: const AlwaysStoppedAnimation<Color>(Colors.white),
+          ),
+          const SizedBox(height: 5),
+          Text(
+            "${expense.toStringAsFixed(2)} / ${monthlyLimit.toStringAsFixed(2)}",
+            style: const TextStyle(color: Colors.white),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildTransactionsList(
+    List<Transaction> incomeTransactions,
+    List<Transaction> expenseTransactions,
+  ) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        const Text(
+          "Income",
+          style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+        ),
+        const SizedBox(height: 8),
+        incomeTransactions.isEmpty
+            ? const Text("You don't have any income yet",
+                style: TextStyle(color: Colors.grey))
+            : Column(
+                children: incomeTransactions
+                    .map(
+                      (transaction) => _buildTransactionItem(
+                        icon: Icons.payments,
+                        title: transaction.notes ?? 'Income',
+                        date:
+                            DateFormat('dd MMM yyyy').format(transaction.date),
+                        amount: "+ ${transaction.amount.toStringAsFixed(2)} \$",
+                      ),
+                    )
+                    .toList(),
+              ),
+        const SizedBox(height: 16),
+        const Text(
+          "Expense",
+          style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+        ),
+        const SizedBox(height: 8),
+        expenseTransactions.isEmpty
+            ? const Text("You don't have any expense yet",
+                style: TextStyle(color: Colors.grey))
+            : Column(
+                children: expenseTransactions
+                    .map(
+                      (transaction) => _buildTransactionItem(
+                        icon: Icons.shopping_cart,
+                        title: transaction.notes ?? 'Expense',
+                        date:
+                            DateFormat('dd MMM yyyy').format(transaction.date),
+                        amount: "- ${transaction.amount.toStringAsFixed(2)} \$",
+                      ),
+                    )
+                    .toList(),
+              ),
+      ],
     );
   }
 
@@ -309,22 +317,37 @@ class HomeScreen extends StatelessWidget {
     required String date,
     required String amount,
   }) {
-    return Row(
-      children: [
-        Icon(icon),
-        const SizedBox(width: 16),
-        Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(title, style: const TextStyle(fontWeight: FontWeight.bold)),
-            Text(date, style: const TextStyle(color: Colors.grey)),
-          ],
-        ),
-        const Spacer(),
-        Text(amount,
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 8.0),
+      child: Row(
+        children: [
+          Icon(icon),
+          const SizedBox(width: 16),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  title,
+                  style: const TextStyle(fontWeight: FontWeight.bold),
+                  overflow: TextOverflow.ellipsis,
+                ),
+                Text(
+                  date,
+                  style: const TextStyle(color: Colors.grey),
+                ),
+              ],
+            ),
+          ),
+          Text(
+            amount,
             style: TextStyle(
-                color: amount.startsWith("+") ? Colors.green : Colors.red)),
-      ],
+              color: amount.startsWith("+") ? Colors.green : Colors.red,
+              fontWeight: FontWeight.w500,
+            ),
+          ),
+        ],
+      ),
     );
   }
 }
@@ -363,169 +386,114 @@ class _HomeTabState extends State<HomeTab> {
               _currentIndex = index;
             });
           },
-          items: [
-            BottomNavigationBarItem(
-              icon: Column(
-                mainAxisAlignment:
-                    MainAxisAlignment.end, // Nút khác đẩy xuống dưới
-                children: [
-                  SvgPicture.asset(
-                    'assets/icons/li_home.svg',
-                    width: 24,
-                    height: 24,
-                    color: _currentIndex == 0
-                        ? AppColors.bottomNavIconHover
-                        : AppColors.bottomNavIconColor,
-                  ),
-                  const SizedBox(height: 4),
-                  Text(
-                    'Home',
-                    style: TextStyle(
-                      fontSize: 12,
-                      color: _currentIndex == 0
-                          ? AppColors.bottomNavIconHover
-                          : AppColors.bottomNavIconColor,
-                    ),
-                  ),
-                ],
-              ),
-            ),
-            BottomNavigationBarItem(
-              icon: Column(
-                mainAxisAlignment:
-                    MainAxisAlignment.end, // Nút khác đẩy xuống dưới
-                children: [
-                  SvgPicture.asset(
-                    'assets/icons/li_account.svg',
-                    width: 24,
-                    height: 24,
-                    color: _currentIndex == 1
-                        ? AppColors.bottomNavIconHover
-                        : AppColors.bottomNavIconColor,
-                  ),
-                  const SizedBox(height: 4),
-                  Text(
-                    'Account',
-                    style: TextStyle(
-                      fontSize: 12,
-                      color: _currentIndex == 1
-                          ? AppColors.bottomNavIconHover
-                          : AppColors.bottomNavIconColor,
-                    ),
-                  ),
-                ],
-              ),
-            ),
-            BottomNavigationBarItem(
-              icon: Column(
-                mainAxisAlignment:
-                    MainAxisAlignment.start, // Camera sát lên trên
-                children: [
-                  Container(
-                    padding: const EdgeInsets.all(16),
-                    decoration: const BoxDecoration(
-                      shape: BoxShape.circle,
-                      color: Colors.blue,
-                    ),
-                    child: SvgPicture.asset(
-                      'assets/icons/li_camera.svg',
-                      width: 24,
-                      height: 24,
-                      color: Colors.white,
-                    ),
-                  ),
-                ],
-              ),
-            ),
-            BottomNavigationBarItem(
-              icon: Column(
-                mainAxisAlignment:
-                    MainAxisAlignment.end, // Nút khác đẩy xuống dưới
-                children: [
-                  SvgPicture.asset(
-                    'assets/icons/li_report.svg',
-                    width: 24,
-                    height: 24,
-                    color: _currentIndex == 3
-                        ? AppColors.bottomNavIconHover
-                        : AppColors.bottomNavIconColor,
-                  ),
-                  const SizedBox(height: 4),
-                  Text(
-                    'Report',
-                    style: TextStyle(
-                      fontSize: 12,
-                      color: _currentIndex == 3
-                          ? AppColors.bottomNavIconHover
-                          : AppColors.bottomNavIconColor,
-                    ),
-                  ),
-                ],
-              ),
-            ),
-            BottomNavigationBarItem(
-              icon: Column(
-                mainAxisAlignment:
-                    MainAxisAlignment.end, // Nút khác đẩy xuống dưới
-                children: [
-                  SvgPicture.asset(
-                    'assets/icons/li_profile.svg',
-                    width: 24,
-                    height: 24,
-                    color: _currentIndex == 4
-                        ? AppColors.bottomNavIconHover
-                        : AppColors.bottomNavIconColor,
-                  ),
-                  const SizedBox(height: 4),
-                  Text(
-                    'Profile',
-                    style: TextStyle(
-                      fontSize: 12,
-                      color: _currentIndex == 4
-                          ? AppColors.bottomNavIconHover
-                          : AppColors.bottomNavIconColor,
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          ],
+          items: _buildTabBarItems(),
         ),
         tabBuilder: (BuildContext context, int index) {
           return Stack(
             children: [
-              _screens[index], // Chồng màn hình hiện tại
-              Positioned(
-                bottom: 20, // Đặt dấu + ở dưới cùng
-                right: 20, // Đặt dấu + ở bên phải
-                child: GestureDetector(
-                  onTap: () {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                          builder: (context) => const TransactionScreen(
-                              currentScreen: HomeTab())),
-                    );
-                    print("Dấu + đã được nhấn");
-                  },
-                  child: Container(
-                    width: 56,
-                    height: 56,
-                    decoration: BoxDecoration(
-                      shape: BoxShape.circle,
-                      color: Colors.blue, 
-                    ),
-                    child: const Icon(
-                      Icons.add,
-                      color: Colors.white,
-                      size: 30,
-                    ),
-                  ),
+              _screens[index],
+              if (_currentIndex != 2) // Hide FAB on camera screen
+                Positioned(
+                  bottom: 20,
+                  right: 20,
+                  child: _buildAddTransactionButton(context),
                 ),
-              ),
             ],
           );
         },
+      ),
+    );
+  }
+
+  List<BottomNavigationBarItem> _buildTabBarItems() {
+    return [
+      _buildTabBarItem('Home', 'assets/icons/li_home.svg', 0),
+      _buildTabBarItem('Account', 'assets/icons/li_account.svg', 1),
+      _buildCameraItem(),
+      _buildTabBarItem('Report', 'assets/icons/li_report.svg', 3),
+      _buildTabBarItem('Profile', 'assets/icons/li_profile.svg', 4),
+    ];
+  }
+
+  BottomNavigationBarItem _buildTabBarItem(
+    String label,
+    String iconPath,
+    int index,
+  ) {
+    return BottomNavigationBarItem(
+      icon: Column(
+        mainAxisAlignment: MainAxisAlignment.end,
+        children: [
+          SvgPicture.asset(
+            iconPath,
+            width: 24,
+            height: 24,
+            color: _currentIndex == index
+                ? AppColors.bottomNavIconHover
+                : AppColors.bottomNavIconColor,
+          ),
+          const SizedBox(height: 4),
+          Text(
+            label,
+            style: TextStyle(
+              fontSize: 12,
+              color: _currentIndex == index
+                  ? AppColors.bottomNavIconHover
+                  : AppColors.bottomNavIconColor,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  BottomNavigationBarItem _buildCameraItem() {
+    return BottomNavigationBarItem(
+      icon: Column(
+        mainAxisAlignment: MainAxisAlignment.start,
+        children: [
+          Container(
+            padding: const EdgeInsets.all(16),
+            decoration: const BoxDecoration(
+              shape: BoxShape.circle,
+              color: Colors.blue,
+            ),
+            child: SvgPicture.asset(
+              'assets/icons/li_camera.svg',
+              width: 24,
+              height: 24,
+              color: Colors.white,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildAddTransactionButton(BuildContext context) {
+    return GestureDetector(
+      onTap: () {
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (context) => const TransactionScreen(
+              currentScreen: HomeTab(),
+            ),
+          ),
+        );
+      },
+      child: Container(
+        width: 56,
+        height: 56,
+        decoration: const BoxDecoration(
+          shape: BoxShape.circle,
+          color: Colors.blue,
+        ),
+        child: const Icon(
+          Icons.add,
+          color: Colors.white,
+          size: 30,
+        ),
       ),
     );
   }

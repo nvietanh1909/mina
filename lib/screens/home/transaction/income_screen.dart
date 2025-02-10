@@ -73,12 +73,11 @@ class _IncomeScreenState extends State<IncomeScreen> {
       }
 
       final transaction = Transaction(
-        walletId: selectedWalletId,
         amount: amount,
-        type: 'income', // hoặc 'expense'
+        type: 'income',
         category: categoryId,
         date: DateFormat('d MMM yyyy').parse(date),
-        notes: notesController.text,
+        notes: notesController.text.isNotEmpty ? notesController.text : null,
       );
       await context.read<TransactionProvider>().createTransaction(transaction);
 

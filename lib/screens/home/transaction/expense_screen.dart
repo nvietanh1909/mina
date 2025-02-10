@@ -90,7 +90,6 @@ class _ExpenseScreenState extends State<ExpenseScreen> {
       print('Date: $date');
 
       final transaction = Transaction(
-        walletId: selectedWalletId,
         amount: amount,
         type: 'expense',
         category: categoryId,
