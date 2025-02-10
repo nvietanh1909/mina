@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:mina/provider/transaction_provider.dart';
+import 'package:mina/provider/wallet_provider.dart';
 import 'package:mina/screens/auth/login_screen.dart';
 import 'package:mina/screens/home/home_screen.dart';
 import 'package:mina/widgets/intro_screen.dart';
@@ -17,6 +19,8 @@ void main() async {
         ChangeNotifierProvider(
           create: (_) => AuthProvider()..loadUser(),
         ),
+        ChangeNotifierProvider(create: (_) => WalletProvider()),
+        ChangeNotifierProvider(create: (_) => TransactionProvider()),
       ],
       child: MyApp(),
     ),

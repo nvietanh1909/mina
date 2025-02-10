@@ -1,33 +1,37 @@
-import 'dart:ffi';
-
 class Wallet {
   final String id;
   final String userId;
-  final Double balance;
-  final String active;
+  final String name;
+  final String? description;
+  final double balance;
+  final String currency;
+  final bool isDefault;
+  final DateTime createdAt;
+  final DateTime updatedAt;
 
   Wallet({
     required this.id,
     required this.userId,
+    required this.name,
+    this.description,
     required this.balance,
-    required this.active,
+    required this.currency,
+    required this.isDefault,
+    required this.createdAt,
+    required this.updatedAt,
   });
 
   factory Wallet.fromJson(Map<String, dynamic> json) {
     return Wallet(
-      id: json['id'],
+      id: json['_id'],
       userId: json['userId'],
-      balance: json['email'],
-      active: json['name'],
+      name: json['name'],
+      description: json['description'],
+      balance: json['balance'].toDouble(),
+      currency: json['currency'],
+      isDefault: json['isDefault'],
+      createdAt: DateTime.parse(json['createdAt']),
+      updatedAt: DateTime.parse(json['updatedAt']),
     );
-  }
-
-  Map<String, dynamic> toJson() {
-    return {
-      'id': id,
-      'userId': userId,
-      'balance': balance,
-      'active': active,
-    };
   }
 }

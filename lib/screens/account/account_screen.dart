@@ -1,4 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:mina/model/wallet_model.dart';
+import 'package:mina/provider/wallet_provider.dart';
+import 'package:mina/screens/home/transaction/transaction_screen.dart';
+import 'package:provider/provider.dart';
 import 'saving_screen.dart';
 
 class AccountScreen extends StatefulWidget {
@@ -66,82 +70,104 @@ class AccountTab extends StatefulWidget {
 }
 
 class _AccountTabState extends State<AccountTab> {
-  // Dữ liệu giả
-  final List<Map<String, dynamic>> walletList = [
-    {
-      'walletName': 'Wallet 1',
-      'balance': 1000,
-      'active': true,
-    },
-    {
-      'walletName': 'Wallet 2',
-      'balance': 500,
-      'active': false,
-    },
-    {
-      'walletName': 'Wallet 3',
-      'balance': 2500,
-      'active': false,
-    },
-  ];
+  @override
+  void initState() {
+    super.initState();
+    Future.microtask(
+      () => context.read<WalletProvider>().loadWallets(),
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
-    return SingleChildScrollView(
-      child: Padding(
-        padding: const EdgeInsets.all(16.0),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            const SizedBox(height: 16),
+    return Consumer<WalletProvider>(
+      builder: (context, walletProvider, child) {
+        if (walletProvider.isLoading) {
+          return const Center(child: CircularProgressIndicator());
+        }
 
-            // Hiển thị danh sách các ví
-            ListView.builder(
-              shrinkWrap: true,
-              physics: const NeverScrollableScrollPhysics(),
-              itemCount: walletList.length,
-              itemBuilder: (context, index) {
-                bool isActive = walletList[index]['active'] ?? false;
-                return _buildAccountItem(
-                  icon: Icons.account_balance_wallet,
-                  iconColor:
-                      isActive ? Colors.green : Colors.red, // Thay đổi màu icon
-                  title: "${walletList[index]['walletName']}",
-                  amount: "\$ ${walletList[index]['balance']}",
-                  status: isActive ? 'Active' : 'Inactive',
-                );
-              },
+        if (walletProvider.error != null) {
+          return Center(
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Text(
+                  'Đã có lỗi xảy ra: ${walletProvider.error}',
+                  style: const TextStyle(color: Colors.red),
+                  textAlign: TextAlign.center,
+                ),
+                ElevatedButton(
+                  onPressed: () => walletProvider.loadWallets(),
+                  child: const Text('Thử lại'),
+                ),
+              ],
             ),
+          );
+        }
 
-            const SizedBox(height: 8), // Khoảng cách giữa Cash và Add Wallet
+        return SingleChildScrollView(
+          child: Padding(
+            padding: const EdgeInsets.all(16.0),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const SizedBox(height: 16),
 
-            // Nút thêm Wallet
-            Align(
-              alignment: Alignment.center, // Căn giữa
-              child: ElevatedButton.icon(
-                onPressed: () {
-                  // Xử lý khi nhấn nút Add Wallet
-                  // Navigator.push(
-                  //   context,
-                  //   MaterialPageRoute(builder: (context) => AddWalletScreen()),
-                  // );
-                },
-                icon: const Icon(Icons.add),
-                label: const Text("Add Wallet"),
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: Colors.blue,
-                  foregroundColor: Colors.white,
-                  padding:
-                      const EdgeInsets.symmetric(vertical: 12, horizontal: 16),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(8),
+                // Hiển thị danh sách các ví
+                ListView.builder(
+                  shrinkWrap: true,
+                  physics: const NeverScrollableScrollPhysics(),
+                  itemCount: walletProvider.wallets.length,
+                  itemBuilder: (context, index) {
+                    final wallet = walletProvider.wallets[index];
+                    return _buildAccountItem(
+                      icon: Icons.account_balance_wallet,
+                      iconColor: wallet.isDefault ? Colors.green : Colors.blue,
+                      title: wallet.name,
+                      amount:
+                          "${wallet.balance.toStringAsFixed(0)} ${wallet.currency}",
+                      status: wallet.isDefault ? 'Inactive' : 'Active',
+                      onMoreTap: () => _showWalletOptions(context, wallet),
+                    );
+                  },
+                ),
+
+                const SizedBox(height: 16),
+
+                // Nút thêm Wallet
+                Align(
+                  alignment: Alignment.center,
+                  child: ElevatedButton.icon(
+                    onPressed: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => const TransactionScreen(
+                            currentScreen: AccountScreen(),
+                          ),
+                        ),
+                      );
+                    },
+                    icon: const Icon(Icons.add),
+                    label: const Text("Cash flow"),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Colors.blue,
+                      foregroundColor: Colors.white,
+                      padding: const EdgeInsets.symmetric(
+                        vertical: 12,
+                        horizontal: 16,
+                      ),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                    ),
                   ),
                 ),
-              ),
+              ],
             ),
-          ],
-        ),
-      ),
+          ),
+        );
+      },
     );
   }
 
@@ -151,6 +177,7 @@ class _AccountTabState extends State<AccountTab> {
     required String title,
     required String amount,
     required String status,
+    required VoidCallback onMoreTap,
   }) {
     return Card(
       child: ListTile(
@@ -185,9 +212,150 @@ class _AccountTabState extends State<AccountTab> {
         ),
         trailing: IconButton(
           icon: const Icon(Icons.more_vert),
-          onPressed: () {
-            // Handle more actions
-          },
+          onPressed: onMoreTap,
+        ),
+      ),
+    );
+  }
+
+  void _showAddWalletDialog(BuildContext context) {
+    final nameController = TextEditingController();
+    final descriptionController = TextEditingController();
+    final formKey = GlobalKey<FormState>();
+
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Thêm ví mới'),
+        content: Form(
+          key: formKey,
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              TextFormField(
+                controller: nameController,
+                decoration: const InputDecoration(
+                  labelText: 'Tên ví',
+                  border: OutlineInputBorder(),
+                ),
+                validator: (value) {
+                  if (value == null || value.isEmpty) {
+                    return 'Vui lòng nhập tên ví';
+                  }
+                  return null;
+                },
+              ),
+              const SizedBox(height: 16),
+              TextFormField(
+                controller: descriptionController,
+                decoration: const InputDecoration(
+                  labelText: 'Mô tả (tùy chọn)',
+                  border: OutlineInputBorder(),
+                ),
+                maxLines: 2,
+              ),
+            ],
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('Hủy'),
+          ),
+          ElevatedButton(
+            onPressed: () async {
+              if (formKey.currentState!.validate()) {
+                try {
+                  await context.read<WalletProvider>().createWallet(
+                        nameController.text,
+                        descriptionController.text,
+                        'VND',
+                      );
+                  if (mounted) {
+                    Navigator.pop(context);
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(content: Text('Tạo ví thành công')),
+                    );
+                  }
+                } catch (e) {
+                  if (mounted) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(content: Text(e.toString())),
+                    );
+                  }
+                }
+              }
+            },
+            child: const Text('Tạo'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _showWalletOptions(BuildContext context, Wallet wallet) {
+    showModalBottomSheet(
+      context: context,
+      builder: (context) => SafeArea(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            ListTile(
+              leading: const Icon(Icons.edit),
+              title: const Text('Chỉnh sửa'),
+              onTap: () {
+                Navigator.pop(context);
+                // TODO: Show edit dialog
+              },
+            ),
+            if (!wallet.isDefault)
+              ListTile(
+                leading: const Icon(Icons.delete, color: Colors.red),
+                title: const Text('Xóa', style: TextStyle(color: Colors.red)),
+                onTap: () async {
+                  Navigator.pop(context);
+                  final confirm = await showDialog<bool>(
+                    context: context,
+                    builder: (context) => AlertDialog(
+                      title: const Text('Xác nhận xóa'),
+                      content: const Text('Bạn có chắc muốn xóa ví này?'),
+                      actions: [
+                        TextButton(
+                          onPressed: () => Navigator.pop(context, false),
+                          child: const Text('Hủy'),
+                        ),
+                        ElevatedButton(
+                          onPressed: () => Navigator.pop(context, true),
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: Colors.red,
+                          ),
+                          child: const Text('Xóa'),
+                        ),
+                      ],
+                    ),
+                  );
+
+                  if (confirm == true) {
+                    try {
+                      await context
+                          .read<WalletProvider>()
+                          .deleteWallet(wallet.id);
+                      if (mounted) {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          const SnackBar(content: Text('Xóa ví thành công')),
+                        );
+                      }
+                    } catch (e) {
+                      if (mounted) {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          SnackBar(content: Text(e.toString())),
+                        );
+                      }
+                    }
+                  }
+                },
+              ),
+          ],
         ),
       ),
     );

@@ -2,10 +2,11 @@ import 'dart:convert';
 import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
 import '../model/user_model.dart';
+import 'package:mina/constans/constants.dart';
 
 class AuthService {
-  static const String baseUrl = 'http://192.168.100.206:5000';
-  static const String tokenKey = 'auth_token';
+  static const String baseUrl = AppConfig.baseUrl;
+  static const String tokenKey = AppConfig.tokenKey;
 
   Future<String?> getToken() async {
     final prefs = await SharedPreferences.getInstance();

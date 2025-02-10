@@ -39,7 +39,6 @@ class _TransactionScreenState extends State<TransactionScreen> {
             tabs: [
               Tab(text: "EXPENSE"),
               Tab(text: "INCOME"),
-              Tab(text: "TRANSFER"),
             ],
             labelColor: Colors.blue,
             unselectedLabelColor: Colors.grey,
@@ -50,7 +49,6 @@ class _TransactionScreenState extends State<TransactionScreen> {
           children: [
             ExpenseScreen(),
             IncomeScreen(),
-            AccumulateScreen(),
           ],
         ),
       ),
