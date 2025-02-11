@@ -1,6 +1,8 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/rendering.dart';
 import 'package:flutter_svg/svg.dart';
+import 'package:http/testing.dart';
 import 'package:mina/model/transaction_model.dart';
 import 'package:mina/screens/account/account_screen.dart';
 import 'package:mina/screens/camera/camera_screen.dart';
@@ -63,6 +65,11 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
       final walletProvider =
           Provider.of<WalletProvider>(context, listen: false);
 
+      final defaultWallet = walletProvider.wallets.firstWhere(
+          (wallet) => wallet.isDefault,
+          orElse: () => walletProvider.wallets.first);
+      final monthlyLimit = defaultWallet.monthlyLimit;
+
       await Future.wait([
         walletProvider.loadWallets(),
         transactionProvider.fetchTransactions()
@@ -71,6 +78,7 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
       // Log kết quả
       print('Wallets loaded: ${walletProvider.wallets.length}');
       print('Transactions loaded: ${transactionProvider.transactions.length}');
+      print('Monthly limit: ${monthlyLimit}');
     } catch (e) {
       print('Error loading data: $e');
       rethrow;
@@ -214,7 +222,14 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
   }
 
   Widget _buildLimitCard(double expense) {
-    const monthlyLimit = 1000.0;
+    final walletProvider = Provider.of<WalletProvider>(context, listen: false);
+    final defaultWallet = walletProvider.wallets.firstWhere(
+        (wallet) => wallet.isDefault,
+        orElse: () => walletProvider.wallets.first);
+
+    // Sử dụng monthlyLimit từ ví
+    final monthlyLimit = defaultWallet.monthlyLimit;
+
     final limitProgress = (expense / monthlyLimit).clamp(0.0, 1.0);
 
     return Container(
@@ -277,7 +292,7 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
                     .map(
                       (transaction) => _buildTransactionItem(
                         icon: Icons.payments,
-                        title: transaction.notes ?? 'Income',
+                        title: transaction.category ?? 'Income',
                         date:
                             DateFormat('dd MMM yyyy').format(transaction.date),
                         amount: "+ ${transaction.amount.toStringAsFixed(2)} \$",
@@ -299,7 +314,7 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
                     .map(
                       (transaction) => _buildTransactionItem(
                         icon: Icons.shopping_cart,
-                        title: transaction.notes ?? 'Expense',
+                        title: transaction.category ?? 'Expense',
                         date:
                             DateFormat('dd MMM yyyy').format(transaction.date),
                         amount: "- ${transaction.amount.toStringAsFixed(2)} \$",

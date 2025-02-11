@@ -92,7 +92,7 @@ class _ExpenseScreenState extends State<ExpenseScreen> {
       final transaction = Transaction(
         amount: amount,
         type: 'expense',
-        category: categoryId,
+        category: category,
         date: DateFormat('d MMM yyyy').parse(date),
         notes: notesController.text,
       );

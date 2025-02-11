@@ -75,7 +75,7 @@ class _IncomeScreenState extends State<IncomeScreen> {
       final transaction = Transaction(
         amount: amount,
         type: 'income',
-        category: categoryId,
+        category: category,
         date: DateFormat('d MMM yyyy').parse(date),
         notes: notesController.text.isNotEmpty ? notesController.text : null,
       );

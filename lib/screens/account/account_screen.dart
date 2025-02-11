@@ -124,9 +124,8 @@ class _AccountTabState extends State<AccountTab> {
                       icon: Icons.account_balance_wallet,
                       iconColor: wallet.isDefault ? Colors.green : Colors.blue,
                       title: wallet.name,
-                      amount:
-                          "${wallet.balance.toStringAsFixed(0)} ${wallet.currency}",
-                      status: wallet.isDefault ? 'Inactive' : 'Active',
+                      amount: "${wallet.balance.toStringAsFixed(0)}",
+                      status: wallet.isDefault ? 'Active' : 'Inactive',
                       onMoreTap: () => _showWalletOptions(context, wallet),
                     );
                   },
@@ -135,34 +134,34 @@ class _AccountTabState extends State<AccountTab> {
                 const SizedBox(height: 16),
 
                 // Nút thêm Wallet
-                Align(
-                  alignment: Alignment.center,
-                  child: ElevatedButton.icon(
-                    onPressed: () {
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (context) => const TransactionScreen(
-                            currentScreen: AccountScreen(),
-                          ),
-                        ),
-                      );
-                    },
-                    icon: const Icon(Icons.add),
-                    label: const Text("Cash flow"),
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: Colors.blue,
-                      foregroundColor: Colors.white,
-                      padding: const EdgeInsets.symmetric(
-                        vertical: 12,
-                        horizontal: 16,
-                      ),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(8),
-                      ),
-                    ),
-                  ),
-                ),
+                // Align(
+                //   alignment: Alignment.center,
+                //   child: ElevatedButton.icon(
+                //     onPressed: () {
+                //       Navigator.push(
+                //         context,
+                //         MaterialPageRoute(
+                //           builder: (context) => const TransactionScreen(
+                //             currentScreen: AccountScreen(),
+                //           ),
+                //         ),
+                //       );
+                //     },
+                //     icon: const Icon(Icons.add),
+                //     label: const Text("Cash flow"),
+                //     style: ElevatedButton.styleFrom(
+                //       backgroundColor: Colors.blue,
+                //       foregroundColor: Colors.white,
+                //       padding: const EdgeInsets.symmetric(
+                //         vertical: 12,
+                //         horizontal: 16,
+                //       ),
+                //       shape: RoundedRectangleBorder(
+                //         borderRadius: BorderRadius.circular(8),
+                //       ),
+                //     ),
+                //   ),
+                // ),
               ],
             ),
           ),
