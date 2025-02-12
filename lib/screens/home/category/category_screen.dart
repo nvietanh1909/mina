@@ -3,7 +3,7 @@ import 'package:mina/screens/home/transaction/transaction_screen.dart';
 import 'new_category_screen.dart';
 
 class Category {
-  final String id; 
+  final String id;
   final String name;
   final String imageUrl;
 

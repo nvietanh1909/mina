@@ -14,6 +14,7 @@ import 'package:provider/provider.dart';
 import 'package:mina/provider/wallet_provider.dart';
 import 'package:mina/provider/transaction_provider.dart';
 import 'package:intl/intl.dart';
+import 'package:mina/screens/chatbot/chatbot_screen.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({Key? key}) : super(key: key);
@@ -491,9 +492,7 @@ class _HomeTabState extends State<HomeTab> {
         Navigator.push(
           context,
           MaterialPageRoute(
-            builder: (context) => const TransactionScreen(
-              currentScreen: HomeTab(),
-            ),
+            builder: (context) => const ChatbotScreen(),
           ),
         );
       },
@@ -505,7 +504,7 @@ class _HomeTabState extends State<HomeTab> {
           color: Colors.blue,
         ),
         child: const Icon(
-          Icons.add,
+          Icons.message_outlined,
           color: Colors.white,
           size: 30,
         ),
