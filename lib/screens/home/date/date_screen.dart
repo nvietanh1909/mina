@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 
 class DateScreen extends StatefulWidget {
-  const DateScreen({Key? key}): super(key: key);
+  const DateScreen({Key? key}) : super(key: key);
 
   @override
   State<DateScreen> createState() => _DateScreenState();
@@ -11,12 +11,13 @@ class DateScreen extends StatefulWidget {
 class _DateScreenState extends State<DateScreen> {
   DateTime _selectedDate = DateTime.now();
   final _dateFormat = DateFormat('MMMM yyyy');
+  final _displayFormat = DateFormat('d MMM yyyy');
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        centerTitle: true, // Căn giữa tiêu đề
+        centerTitle: true,
         title: const Text(
           'CALENDAR',
           style: TextStyle(fontWeight: FontWeight.bold),
@@ -24,7 +25,8 @@ class _DateScreenState extends State<DateScreen> {
         actions: [
           TextButton(
             onPressed: () {
-              // Handle "Choose" button press
+              // Trả ngày về trang trước
+              Navigator.of(context).pop(_displayFormat.format(_selectedDate));
             },
             child: const Text(
               'Choose',

@@ -4,7 +4,7 @@ import 'income_screen.dart';
 import 'expense_screen.dart';
 
 class TransactionScreen extends StatefulWidget {
-  final Widget currentScreen; // Add the currentScreen parameter
+  final Widget currentScreen;
 
   const TransactionScreen({super.key, required this.currentScreen});
 

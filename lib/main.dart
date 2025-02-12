@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:mina/screens/chatbot/chatbot_screen.dart';
 import 'package:mina/provider/transaction_provider.dart';
 import 'package:mina/provider/wallet_provider.dart';
 import 'package:mina/screens/auth/login_screen.dart';
@@ -11,7 +12,7 @@ import 'package:provider/provider.dart';
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   final authProvider = AuthProvider();
-  await authProvider.logout();
+  await authProvider.loadUser();
 
   runApp(
     MultiProvider(
