@@ -30,6 +30,7 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
   void initState() {
     super.initState();
     WidgetsBinding.instance.addObserver(this);
+    _autoLoadWallet();
     _loadInitialData();
   }
 
@@ -37,6 +38,35 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
   void dispose() {
     WidgetsBinding.instance.removeObserver(this);
     super.dispose();
+  }
+
+  Future<void> _autoLoadWallet() async {
+    try {
+      final walletProvider =
+          Provider.of<WalletProvider>(context, listen: false);
+
+      // Load wallets
+      await walletProvider.loadWallets();
+
+      if (walletProvider.wallets.isEmpty) {
+        print('No wallets available');
+        return;
+      }
+
+      // Load transactions sau khi có wallets
+      final transactionProvider =
+          Provider.of<TransactionProvider>(context, listen: false);
+      await transactionProvider.fetchTransactions();
+
+      setState(() {
+        _isLoading = false;
+      });
+    } catch (e) {
+      print('Error loading initial data: $e');
+      setState(() {
+        _isLoading = false;
+      });
+    }
   }
 
   @override
@@ -504,7 +534,7 @@ class _HomeTabState extends State<HomeTab> {
           color: Colors.blue,
         ),
         child: const Icon(
-          Icons.message_outlined,
+          Icons.message,
           color: Colors.white,
           size: 30,
         ),

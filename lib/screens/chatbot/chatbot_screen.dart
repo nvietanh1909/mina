@@ -94,7 +94,7 @@ class _ChatbotScreenState extends State<ChatbotScreen>
               height: 8,
               width: 8,
               decoration: BoxDecoration(
-                color: Colors.grey.withOpacity(
+                color: const Color(0xFF38BDF8).withOpacity(
                   (index * 0.4 + _typeIndicatorController.value) % 1,
                 ),
                 shape: BoxShape.circle,
@@ -176,7 +176,7 @@ class _ChatbotScreenState extends State<ChatbotScreen>
             begin: Alignment.topCenter,
             end: Alignment.bottomCenter,
             colors: [
-              const Color.fromARGB(255, 255, 255, 255),
+              const Color(0xFFF8FAFC),
               Colors.white,
             ],
           ),
@@ -201,10 +201,18 @@ class _ChatbotScreenState extends State<ChatbotScreen>
       elevation: 0,
       centerTitle: true,
       title: const Text(
-        'Mina Assistant',
+        'Mina Chatbot',
         style: TextStyle(
+          color: Colors.white,
           fontWeight: FontWeight.w600,
         ),
+      ),
+      backgroundColor: const Color.fromARGB(255, 43, 43, 43),
+      leading: IconButton(
+        icon: const Icon(Icons.arrow_back, color: Colors.white), // Màu trắng
+        onPressed: () {
+          Navigator.of(context).pop();
+        },
       ),
       actions: [
         if (isLoading)
@@ -233,7 +241,7 @@ class _ChatbotScreenState extends State<ChatbotScreen>
           Icon(
             Icons.chat_bubble_outline,
             size: 64,
-            color: Colors.blue[200],
+            color: const Color(0xFF38BDF8),
           ),
           const SizedBox(height: 16),
           const Text(
@@ -313,7 +321,7 @@ class _ChatbotScreenState extends State<ChatbotScreen>
               mainAxisSize: MainAxisSize.min,
               children: [
                 Text(
-                  'Đang trả lời',
+                  'Replying...',
                   style: TextStyle(
                     color: Colors.grey[600],
                     fontSize: 14,
@@ -360,7 +368,7 @@ class _ChatbotScreenState extends State<ChatbotScreen>
                       child: TextField(
                         controller: _messageController,
                         decoration: const InputDecoration(
-                          hintText: 'Nhập câu hỏi của bạn...',
+                          hintText: 'Enter your question...',
                           border: InputBorder.none,
                           contentPadding: EdgeInsets.symmetric(
                             horizontal: 16,
@@ -430,8 +438,8 @@ class _ChatBubble extends StatelessWidget {
               padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
               decoration: BoxDecoration(
                 color: message.isUser
-                    ? Theme.of(context).primaryColor
-                    : Colors.white,
+                    ? const Color(0xFF38BDF8)
+                    : const Color.fromARGB(255, 238, 236, 236),
                 borderRadius: BorderRadius.circular(20).copyWith(
                   bottomRight: message.isUser ? Radius.zero : null,
                   bottomLeft: !message.isUser ? Radius.zero : null,
