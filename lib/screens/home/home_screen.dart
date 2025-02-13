@@ -415,7 +415,7 @@ class _HomeTabState extends State<HomeTab> {
   final List<Widget> _screens = const [
     HomeScreen(),
     AccountScreen(),
-    CameraScreen(),
+    TransactionScreen(),
     ReportScreen(),
     ProfileScreen(),
   ];
@@ -459,7 +459,7 @@ class _HomeTabState extends State<HomeTab> {
     return [
       _buildTabBarItem('Home', 'assets/icons/li_home.svg', 0),
       _buildTabBarItem('Account', 'assets/icons/li_account.svg', 1),
-      _buildCameraItem(),
+      _buildTransactionItem(),
       _buildTabBarItem('Report', 'assets/icons/li_report.svg', 3),
       _buildTabBarItem('Profile', 'assets/icons/li_profile.svg', 4),
     ];
@@ -497,7 +497,7 @@ class _HomeTabState extends State<HomeTab> {
     );
   }
 
-  BottomNavigationBarItem _buildCameraItem() {
+  BottomNavigationBarItem _buildTransactionItem() {
     return BottomNavigationBarItem(
       icon: Column(
         mainAxisAlignment: MainAxisAlignment.start,
@@ -508,11 +508,10 @@ class _HomeTabState extends State<HomeTab> {
               shape: BoxShape.circle,
               color: Colors.blue,
             ),
-            child: SvgPicture.asset(
-              'assets/icons/li_camera.svg',
-              width: 24,
-              height: 24,
+            child: const Icon(
+              Icons.add,
               color: Colors.white,
+              size: 30,
             ),
           ),
         ],

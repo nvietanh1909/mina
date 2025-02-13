@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:mina/provider/category_provider.dart';
 import 'package:mina/screens/chatbot/chatbot_screen.dart';
 import 'package:mina/provider/transaction_provider.dart';
 import 'package:mina/provider/wallet_provider.dart';
@@ -22,6 +23,7 @@ void main() async {
         ),
         ChangeNotifierProvider(create: (_) => WalletProvider()),
         ChangeNotifierProvider(create: (_) => TransactionProvider()),
+        ChangeNotifierProvider(create: (_) => CategoryProvider()),
       ],
       child: MyApp(),
     ),

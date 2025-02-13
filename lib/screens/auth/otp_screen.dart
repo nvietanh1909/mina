@@ -43,6 +43,7 @@ class _OtpScreenState extends State<OtpScreen> {
     );
 
     return Scaffold(
+      backgroundColor: Colors.white,
       appBar: AppBar(
         leading: IconButton(
           icon: const Icon(Icons.arrow_back),
@@ -138,7 +139,8 @@ class _OtpScreenState extends State<OtpScreen> {
               const SizedBox(height: 12),
               // Nút "Verify"
               Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 16), // Tạo khoảng cách hai bên
+                padding: const EdgeInsets.symmetric(
+                    horizontal: 16), // Tạo khoảng cách hai bên
                 child: SizedBox(
                   width: double.infinity,
                   height: 48, // Tăng chiều cao để dễ bấm hơn
@@ -152,7 +154,8 @@ class _OtpScreenState extends State<OtpScreen> {
                     style: ElevatedButton.styleFrom(
                       backgroundColor: const Color(0xFF1D61E7),
                       shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(12), // Bo góc mềm mại
+                        borderRadius:
+                            BorderRadius.circular(12), // Bo góc mềm mại
                       ),
                       elevation: 6, // Tạo hiệu ứng đổ bóng
                       shadowColor: Colors.blue.withOpacity(0.3), // Màu bóng nhẹ
