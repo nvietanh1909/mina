@@ -15,8 +15,8 @@ class ProfileScreen extends StatefulWidget {
 class _ProfileScreenState extends State<ProfileScreen> {
   bool _notificationsEnabled = true;
   bool _darkModeEnabled = false;
-  User? _user; 
-  bool _isLoading = true; 
+  User? _user;
+  bool _isLoading = true;
 
   @override
   void initState() {
@@ -42,6 +42,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: Colors.white,
       appBar: PreferredSize(
         preferredSize: Size.zero,
         child: AppBar(
