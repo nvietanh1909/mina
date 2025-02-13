@@ -156,6 +156,7 @@ class _ExpenseScreenState extends State<ExpenseScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: Colors.white,
       body: Stack(
         children: [
           Padding(

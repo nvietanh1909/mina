@@ -15,6 +15,7 @@ import 'package:mina/provider/wallet_provider.dart';
 import 'package:mina/provider/transaction_provider.dart';
 import 'package:intl/intl.dart';
 import 'package:mina/screens/chatbot/chatbot_screen.dart';
+import 'package:mina/utils/number_formatter.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({Key? key}) : super(key: key);
@@ -119,6 +120,7 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: Colors.white,
       appBar: PreferredSize(
         preferredSize: Size.zero,
         child: AppBar(
@@ -211,7 +213,7 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
           ),
           const SizedBox(height: 10),
           Text(
-            "\$ ${totalBalance.toStringAsFixed(2)}",
+            "${NumberFormatter.formatCurrency(totalBalance)}",
             style: const TextStyle(
               fontSize: 28,
               fontWeight: FontWeight.bold,
@@ -245,7 +247,7 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
           ],
         ),
         Text(
-          "\$ ${amount.toStringAsFixed(2)}",
+          "${NumberFormatter.formatCurrency(amount)}",
           style: const TextStyle(fontWeight: FontWeight.w500),
         ),
       ],
@@ -280,7 +282,7 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
           ),
           const SizedBox(height: 10),
           Text(
-            "\$ ${expense.toStringAsFixed(2)}",
+            "${NumberFormatter.formatCurrency(expense)}",
             style: const TextStyle(
               fontSize: 28,
               color: Colors.white,
@@ -295,7 +297,7 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
           ),
           const SizedBox(height: 5),
           Text(
-            "${expense.toStringAsFixed(2)} / ${monthlyLimit.toStringAsFixed(2)}",
+            "${NumberFormatter.formatNumber(expense)} / ${NumberFormatter.formatNumber(monthlyLimit)}",
             style: const TextStyle(color: Colors.white),
           ),
         ],
@@ -326,7 +328,8 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
                         title: transaction.category ?? 'Income',
                         date:
                             DateFormat('dd MMM yyyy').format(transaction.date),
-                        amount: "+ ${transaction.amount.toStringAsFixed(2)} \$",
+                        amount:
+                            "+ ${NumberFormatter.formatCurrency(transaction.amount)}",
                       ),
                     )
                     .toList(),
@@ -348,7 +351,8 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
                         title: transaction.category ?? 'Expense',
                         date:
                             DateFormat('dd MMM yyyy').format(transaction.date),
-                        amount: "- ${transaction.amount.toStringAsFixed(2)} \$",
+                        amount:
+                            "- ${NumberFormatter.formatCurrency(transaction.amount)}",
                       ),
                     )
                     .toList(),

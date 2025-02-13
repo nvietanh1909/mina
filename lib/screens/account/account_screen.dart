@@ -4,6 +4,7 @@ import 'package:mina/provider/wallet_provider.dart';
 import 'package:mina/screens/home/transaction/transaction_screen.dart';
 import 'package:provider/provider.dart';
 import 'saving_screen.dart';
+import 'package:mina/utils/number_formatter.dart';
 
 class AccountScreen extends StatefulWidget {
   const AccountScreen({super.key});
@@ -18,13 +19,14 @@ class _AccountScreenState extends State<AccountScreen> {
     return DefaultTabController(
       length: 2,
       child: Scaffold(
+        backgroundColor: Colors.white,
         appBar: AppBar(
-          leading: IconButton(
-            icon: const Icon(Icons.search),
-            onPressed: () {
-              // Handle search action
-            },
-          ),
+          // leading: IconButton(
+          //   icon: const Icon(Icons.search),
+          //   onPressed: () {
+          //     // Handle search action
+          //   },
+          // ),
           title: const Text(
             "Account",
             style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
@@ -124,7 +126,8 @@ class _AccountTabState extends State<AccountTab> {
                       icon: Icons.account_balance_wallet,
                       iconColor: wallet.isDefault ? Colors.green : Colors.blue,
                       title: wallet.name,
-                      amount: "${wallet.balance.toStringAsFixed(0)}",
+                      amount:
+                          "${NumberFormatter.formatCurrency(wallet.balance)}",
                       status: wallet.isDefault ? 'Active' : 'Inactive',
                       onMoreTap: () => _showWalletOptions(context, wallet),
                     );
@@ -133,35 +136,34 @@ class _AccountTabState extends State<AccountTab> {
 
                 const SizedBox(height: 16),
 
-                // Nút thêm Wallet
-                // Align(
-                //   alignment: Alignment.center,
-                //   child: ElevatedButton.icon(
-                //     onPressed: () {
-                //       Navigator.push(
-                //         context,
-                //         MaterialPageRoute(
-                //           builder: (context) => const TransactionScreen(
-                //             currentScreen: AccountScreen(),
-                //           ),
-                //         ),
-                //       );
-                //     },
-                //     icon: const Icon(Icons.add),
-                //     label: const Text("Cash flow"),
-                //     style: ElevatedButton.styleFrom(
-                //       backgroundColor: Colors.blue,
-                //       foregroundColor: Colors.white,
-                //       padding: const EdgeInsets.symmetric(
-                //         vertical: 12,
-                //         horizontal: 16,
-                //       ),
-                //       shape: RoundedRectangleBorder(
-                //         borderRadius: BorderRadius.circular(8),
-                //       ),
-                //     ),
-                //   ),
-                // ),
+                Align(
+                  alignment: Alignment.center,
+                  child: ElevatedButton.icon(
+                    onPressed: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => const TransactionScreen(
+                            currentScreen: AccountScreen(),
+                          ),
+                        ),
+                      );
+                    },
+                    icon: const Icon(Icons.add),
+                    label: const Text("Add transaction"),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Colors.blue,
+                      foregroundColor: Colors.white,
+                      padding: const EdgeInsets.symmetric(
+                        vertical: 12,
+                        horizontal: 16,
+                      ),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                    ),
+                  ),
+                ),
               ],
             ),
           ),

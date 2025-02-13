@@ -137,6 +137,7 @@ class _IncomeScreenState extends State<IncomeScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: Colors.white,
       body: Stack(
         children: [
           Padding(
