@@ -136,34 +136,34 @@ class _AccountTabState extends State<AccountTab> {
 
                 const SizedBox(height: 16),
 
-                Align(
-                  alignment: Alignment.center,
-                  child: ElevatedButton.icon(
-                    onPressed: () {
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (context) => const TransactionScreen(
-                            currentScreen: AccountScreen(),
-                          ),
-                        ),
-                      );
-                    },
-                    icon: const Icon(Icons.add),
-                    label: const Text("Add transaction"),
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: Colors.blue,
-                      foregroundColor: Colors.white,
-                      padding: const EdgeInsets.symmetric(
-                        vertical: 12,
-                        horizontal: 16,
-                      ),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(8),
-                      ),
-                    ),
-                  ),
-                ),
+                // Align(
+                //   alignment: Alignment.center,
+                //   child: ElevatedButton.icon(
+                //     onPressed: () {
+                //       Navigator.push(
+                //         context,
+                //         MaterialPageRoute(
+                //           builder: (context) => const TransactionScreen(
+                //             currentScreen: AccountScreen(),
+                //           ),
+                //         ),
+                //       );
+                //     },
+                //     icon: const Icon(Icons.add),
+                //     label: const Text("Add transaction"),
+                //     style: ElevatedButton.styleFrom(
+                //       backgroundColor: Colors.blue,
+                //       foregroundColor: Colors.white,
+                //       padding: const EdgeInsets.symmetric(
+                //         vertical: 12,
+                //         horizontal: 16,
+                //       ),
+                //       shape: RoundedRectangleBorder(
+                //         borderRadius: BorderRadius.circular(8),
+                //       ),
+                //     ),
+                //   ),
+                // ),
               ],
             ),
           ),

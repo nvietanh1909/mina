@@ -74,3 +74,5 @@ flutter:
     - assets/icons/logo.svg
     - assets/icons/coin.svg
     - assets/icons/pig.svg
+    - assets/icons/chatbot.svg
+    - assets/icons/camera.svg

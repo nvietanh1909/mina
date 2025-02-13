@@ -4,9 +4,7 @@ import 'income_screen.dart';
 import 'expense_screen.dart';
 
 class TransactionScreen extends StatefulWidget {
-  final Widget currentScreen;
-
-  const TransactionScreen({super.key, required this.currentScreen});
+  const TransactionScreen({super.key});
 
   @override
   State<TransactionScreen> createState() => _TransactionScreenState();
@@ -16,20 +14,15 @@ class _TransactionScreenState extends State<TransactionScreen> {
   @override
   Widget build(BuildContext context) {
     return DefaultTabController(
-      length: 3,
+      length: 2, // Sửa thành 2 vì chỉ có 2 tab
       child: Scaffold(
         appBar: AppBar(
-          leading: IconButton(
-            icon: const Icon(Icons.close),
-            onPressed: () {
-              Navigator.pop(context);
-            },
-          ),
           title: const Text(
             "New Transaction",
             style: TextStyle(
-                color: Colors.white,
-                fontWeight: FontWeight.bold), // Đặt màu chữ tiêu đề là trắng
+              color: Colors.white,
+              fontWeight: FontWeight.bold,
+            ),
           ),
           backgroundColor: const Color.fromARGB(255, 43, 43, 43),
           elevation: 0,

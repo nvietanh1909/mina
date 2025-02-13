@@ -24,6 +24,12 @@ class _IncomeScreenState extends State<IncomeScreen> {
   String selectedWalletId = '';
   String selectedWalletName = 'Choose Wallet';
   bool _isLoading = false;
+  final Color primaryColor = const Color(0xFF6C63FF); // Màu chủ đạo - tím nhẹ
+  final Color secondaryColor =
+      const Color(0xFFF5F7FF); // Màu nền phụ - xanh nhạt
+  final Color accentColor = const Color(0xFFFF6B6B); // Màu nhấn - đỏ san hô
+  final Color textColor = const Color(0xFF2D3142); // Màu chữ chính
+  final Color subtleColor = const Color(0xFF9BA3AF); // Màu chữ phụ
 
   @override
   void initState() {
@@ -43,13 +49,16 @@ class _IncomeScreenState extends State<IncomeScreen> {
         });
       }
     } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Không thể tải danh sách ví: ${e.toString()}')),
-      );
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+              content: Text('Không thể tải danh sách ví: ${e.toString()}')),
+        );
+      }
     }
   }
 
-  Future<void> _saveIncome() async {
+  Future<void> _saveExpense() async {
     if (category == 'CHOOSE') {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Vui lòng chọn danh mục')),
@@ -77,17 +86,27 @@ class _IncomeScreenState extends State<IncomeScreen> {
         type: 'income',
         category: category,
         date: DateFormat('d MMM yyyy').parse(date),
-        notes: notesController.text.isNotEmpty ? notesController.text : null,
+        notes: notesController.text,
       );
+
       await context.read<TransactionProvider>().createTransaction(transaction);
 
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Thêm thu nhập thành công')),
+          const SnackBar(content: Text('Thêm chi tiêu thành công')),
         );
-        Navigator.pop(context, true);
+
+        // Reset các trường thông tin
+        setState(() {
+          amountController.text = "0";
+          notesController.text = "";
+          category = 'CHOOSE';
+          categoryId = '';
+          date = DateFormat('d MMM yyyy').format(DateTime.now());
+        });
       }
     } catch (e) {
+      print('Error in _saveExpense: $e');
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text(e.toString())),
@@ -141,83 +160,265 @@ class _IncomeScreenState extends State<IncomeScreen> {
       body: Stack(
         children: [
           Padding(
-            padding: const EdgeInsets.all(16.0),
+            padding: const EdgeInsets.symmetric(horizontal: 20),
             child: SingleChildScrollView(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  buildAmountField(),
                   const SizedBox(height: 20),
-                  buildSelectableField('Category', category, () async {
-                    final result = await Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                          builder: (context) => const CategoryScreen()),
-                    );
-                    if (result != null) {
-                      setState(() {
-                        category = result['name'];
-                        categoryId = result['id'];
-                      });
-                    }
-                  }),
-                  buildSelectableField('Date', date, () async {
-                    final selectedDate = await Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (context) => const DateScreen(),
-                      ),
-                    );
-                    if (selectedDate != null) {
-                      setState(() {
-                        date = selectedDate;
-                      });
-                    }
-                  }),
-                  buildSelectableField(
-                      'Wallet', selectedWalletName, _showWalletPicker),
-                  buildNotesField('Notes', notesController),
-                  const SizedBox(height: 20),
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.end,
-                    children: [
-                      ElevatedButton(
-                        onPressed: _isLoading ? null : _saveIncome,
-                        style: ElevatedButton.styleFrom(
-                          foregroundColor: Colors.white,
-                          padding: const EdgeInsets.symmetric(
-                            vertical: 14,
-                            horizontal: 32,
-                          ),
-                          backgroundColor: Colors.blue,
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(8),
+                  // Amount Field
+                  Container(
+                    width: double.infinity,
+                    padding: const EdgeInsets.symmetric(
+                        vertical: 25, horizontal: 20),
+                    decoration: BoxDecoration(
+                      color: const Color(0xFF766DE8),
+                      borderRadius: BorderRadius.circular(20),
+                      boxShadow: [
+                        BoxShadow(
+                          color: const Color(0xFF766DE8).withOpacity(0.2),
+                          spreadRadius: 0,
+                          blurRadius: 20,
+                          offset: const Offset(0, 8),
+                        ),
+                      ],
+                    ),
+                    child: Column(
+                      children: [
+                        const Text(
+                          'Enter Income',
+                          style: TextStyle(
+                            color: Colors.white,
+                            fontSize: 16,
+                            fontWeight: FontWeight.w500,
                           ),
                         ),
-                        child: _isLoading
-                            ? const SizedBox(
-                                width: 20,
-                                height: 20,
-                                child: CircularProgressIndicator(
-                                  strokeWidth: 2,
-                                  valueColor: AlwaysStoppedAnimation<Color>(
-                                      Colors.white),
+                        const SizedBox(height: 15),
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            SizedBox(
+                              width: 200,
+                              child: TextField(
+                                controller: amountController,
+                                keyboardType: TextInputType.number,
+                                textAlign: TextAlign.center,
+                                style: const TextStyle(
+                                  fontSize: 40,
+                                  fontWeight: FontWeight.bold,
+                                  color: Colors.white,
                                 ),
-                              )
-                            : const Text('Save'),
-                      ),
-                    ],
+                                decoration: const InputDecoration(
+                                  border: InputBorder.none,
+                                  hintText: '0',
+                                  hintStyle: TextStyle(
+                                    color: Colors.white70,
+                                    fontSize: 40,
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ],
+                    ),
                   ),
+                  const SizedBox(height: 30),
+                  // Category, Date, Wallet Fields
+                  Container(
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      borderRadius: BorderRadius.circular(15),
+                      border: Border.all(
+                        color: Colors.grey.withOpacity(0.1),
+                        width: 1,
+                      ),
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.black.withOpacity(0.04),
+                          spreadRadius: 0,
+                          blurRadius: 10,
+                          offset: const Offset(0, 2),
+                        ),
+                      ],
+                    ),
+                    child: Column(
+                      children: [
+                        // NEW: Scan Bill option added here
+                        buildSelectableFieldImproved(
+                          'Scan Bill',
+                          'Tap to scan',
+                          Icons.camera_alt,
+                          () {
+                            // TODO: Implement bill scanning functionality
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              const SnackBar(
+                                content: Text(
+                                    'Chức năng quét bill đang được phát triển'),
+                              ),
+                            );
+                          },
+                        ),
+                        buildDivider(),
+                        buildSelectableFieldImproved(
+                          'Category',
+                          category,
+                          Icons.category_outlined,
+                          () async {
+                            final result = await Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                  builder: (context) => const CategoryScreen()),
+                            );
+                            if (result != null) {
+                              setState(() {
+                                category = result['name'];
+                                categoryId = result['id'];
+                              });
+                            }
+                          },
+                        ),
+                        buildDivider(),
+                        buildSelectableFieldImproved(
+                          'Date',
+                          date,
+                          Icons.calendar_today_outlined,
+                          () async {
+                            final selectedDate = await Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                  builder: (context) => const DateScreen()),
+                            );
+                            if (selectedDate != null) {
+                              setState(() {
+                                date = selectedDate;
+                              });
+                            }
+                          },
+                        ),
+                        buildDivider(),
+                        buildSelectableFieldImproved(
+                          'Wallet',
+                          selectedWalletName,
+                          Icons.account_balance_wallet_outlined,
+                          _showWalletPicker,
+                        ),
+                      ],
+                    ),
+                  ),
+                  const SizedBox(height: 30),
+                  // Notes Field
+                  Container(
+                    padding: const EdgeInsets.all(20),
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      borderRadius: BorderRadius.circular(15),
+                      border: Border.all(
+                        color: Colors.grey.withOpacity(0.1),
+                        width: 1,
+                      ),
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.black.withOpacity(0.04),
+                          spreadRadius: 0,
+                          blurRadius: 10,
+                          offset: const Offset(0, 2),
+                        ),
+                      ],
+                    ),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Row(
+                          children: [
+                            Icon(Icons.note_alt_outlined,
+                                color: Colors.grey[600], size: 20),
+                            const SizedBox(width: 10),
+                            Text(
+                              'Notes',
+                              style: TextStyle(
+                                fontSize: 14,
+                                color: Colors.grey[600],
+                              ),
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: 10),
+                        TextField(
+                          controller: notesController,
+                          decoration: InputDecoration(
+                            hintText: 'Enter notes...',
+                            hintStyle: TextStyle(color: Colors.grey[400]),
+                            border: InputBorder.none,
+                          ),
+                          style: const TextStyle(
+                            fontSize: 16,
+                            color: Colors.black87,
+                          ),
+                          maxLines: 3,
+                        ),
+                      ],
+                    ),
+                  ),
+                  const SizedBox(height: 30),
+                  // Save Button
+                  Container(
+                    width: double.infinity,
+                    height: 55,
+                    decoration: BoxDecoration(
+                      color: Colors.blue,
+                      borderRadius: BorderRadius.circular(15),
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.blue.withOpacity(0.3),
+                          spreadRadius: 0,
+                          blurRadius: 10,
+                          offset: const Offset(0, 4),
+                        ),
+                      ],
+                    ),
+                    child: ElevatedButton(
+                      onPressed: _isLoading ? null : _saveExpense,
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: Colors.transparent,
+                        foregroundColor: Colors.white,
+                        shadowColor: Colors.transparent,
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(15),
+                        ),
+                      ),
+                      child: _isLoading
+                          ? const SizedBox(
+                              width: 20,
+                              height: 20,
+                              child: CircularProgressIndicator(
+                                strokeWidth: 2,
+                                valueColor:
+                                    AlwaysStoppedAnimation<Color>(Colors.white),
+                              ),
+                            )
+                          : const Text(
+                              'Save',
+                              style: TextStyle(
+                                fontSize: 16,
+                                fontWeight: FontWeight.w600,
+                              ),
+                            ),
+                    ),
+                  ),
+                  const SizedBox(height: 20),
                 ],
               ),
             ),
           ),
           if (_isLoading)
-            const Positioned.fill(
-              child: ColoredBox(
-                color: Colors.black26,
-                child: Center(
-                  child: CircularProgressIndicator(),
+            Container(
+              color: Colors.black.withOpacity(0.3),
+              child: const Center(
+                child: CircularProgressIndicator(
+                  valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
                 ),
               ),
             ),
@@ -226,73 +427,59 @@ class _IncomeScreenState extends State<IncomeScreen> {
     );
   }
 
-  Widget buildAmountField() {
-    return Center(
-      child: SizedBox(
-        width: 200,
-        child: TextField(
-          controller: amountController,
-          keyboardType: TextInputType.number,
-          textAlign: TextAlign.center,
-          style: const TextStyle(fontSize: 36, fontWeight: FontWeight.w500),
-          decoration: const InputDecoration(
-            border: InputBorder.none,
-            prefixStyle: TextStyle(fontSize: 36, fontWeight: FontWeight.w500),
-          ),
+  Widget buildDivider() {
+    return Container(
+      margin: const EdgeInsets.symmetric(horizontal: 20),
+      height: 1,
+      color: Colors.grey.withOpacity(0.2),
+    );
+  }
+
+  Widget buildSelectableFieldImproved(
+    String label,
+    String value,
+    IconData icon,
+    Function() onTap,
+  ) {
+    return InkWell(
+      onTap: onTap,
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 15),
+        child: Row(
+          children: [
+            Icon(icon, size: 24, color: subtleColor),
+            const SizedBox(width: 15),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    label,
+                    style: TextStyle(
+                      fontSize: 14,
+                      color: subtleColor,
+                    ),
+                  ),
+                  const SizedBox(height: 4),
+                  Text(
+                    value,
+                    style: TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.w500,
+                      color: textColor,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            Icon(
+              Icons.arrow_forward_ios,
+              size: 16,
+              color: subtleColor,
+            ),
+          ],
         ),
       ),
-    );
-  }
-
-  Widget buildSelectableField(String label, String value, Function() onTap) {
-    return Column(
-      children: [
-        InkWell(
-          onTap: onTap,
-          child: Padding(
-            padding: const EdgeInsets.symmetric(vertical: 12),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Text(label,
-                    style: const TextStyle(
-                        fontSize: 16, fontWeight: FontWeight.w400)),
-                Row(
-                  children: [
-                    Text(value, style: const TextStyle(color: Colors.grey)),
-                    const SizedBox(width: 5),
-                    const Icon(Icons.arrow_forward_ios,
-                        size: 16, color: Colors.grey),
-                  ],
-                ),
-              ],
-            ),
-          ),
-        ),
-        Container(
-          height: 1.4,
-          color: const Color(0xFFE1E1E1),
-        ),
-      ],
-    );
-  }
-
-  Widget buildNotesField(String label, TextEditingController controller) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(label,
-            style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w400)),
-        const SizedBox(height: 8),
-        TextField(
-          controller: controller,
-          decoration: const InputDecoration(
-            border: UnderlineInputBorder(),
-            hintText: 'Enter notes...',
-          ),
-        ),
-        const SizedBox(height: 8),
-      ],
     );
   }
 }
