@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
+import 'package:mina/provider/auth_provider.dart';
 import 'package:mina/screens/home/home_screen.dart';
+import 'package:provider/provider.dart';
 import 'signup_screen.dart';
 import 'package:mina/theme/color.dart';
 import 'package:mina/services/api_service.dart';

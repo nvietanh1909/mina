@@ -1,11 +1,20 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
+import 'package:mina/provider/auth_provider.dart';
+import 'package:mina/screens/auth/login_screen.dart';
 import 'package:pinput/pinput.dart';
+import 'package:provider/provider.dart';
 import 'signup_screen.dart';
 import 'package:mina/screens/home/home_screen.dart';
+import 'package:mina/services/otp_service.dart';
 
 class OtpScreen extends StatefulWidget {
-  const OtpScreen({Key? key}) : super(key: key);
+  final String email;
+
+  const OtpScreen({
+    Key? key,
+    required this.email,
+  }) : super(key: key);
 
   @override
   State<OtpScreen> createState() => _OtpScreenState();
@@ -15,6 +24,115 @@ class _OtpScreenState extends State<OtpScreen> {
   final pinController = TextEditingController();
   final focusNode = FocusNode();
   final formKey = GlobalKey<FormState>();
+  final OTPService _otpService = OTPService();
+
+  bool _isLoading = false;
+  String? _errorMessage;
+  int _remainingTime = 600; // 10 phút
+  bool _canResend = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _sendOTP();
+    _startTimer();
+  }
+
+  void _startTimer() {
+    Future.delayed(const Duration(seconds: 1), () {
+      if (_remainingTime > 0 && mounted) {
+        setState(() {
+          _remainingTime--;
+        });
+        _startTimer();
+      } else if (mounted) {
+        setState(() {
+          _canResend = true;
+        });
+      }
+    });
+  }
+
+  String get _formattedTime {
+    int minutes = _remainingTime ~/ 60;
+    int seconds = _remainingTime % 60;
+    return '${minutes.toString().padLeft(2, '0')}:${seconds.toString().padLeft(2, '0')}';
+  }
+
+  Future<void> _sendOTP() async {
+    setState(() {
+      _isLoading = true;
+      _errorMessage = null;
+    });
+
+    try {
+      final result = await _otpService.requestOTP(widget.email);
+      if (!result['success']) {
+        setState(() {
+          _errorMessage = result['message'];
+        });
+      }
+    } catch (e) {
+      setState(() {
+        _errorMessage = 'Không thể gửi mã OTP. Vui lòng thử lại.';
+      });
+    } finally {
+      setState(() {
+        _isLoading = false;
+      });
+    }
+  }
+
+  Future<void> _verifyOTP() async {
+    if (pinController.text.length != 6) {
+      setState(() {
+        _errorMessage = 'Vui lòng nhập đủ 6 số';
+      });
+      return;
+    }
+
+    setState(() {
+      _isLoading = true;
+      _errorMessage = null;
+    });
+
+    try {
+      final result =
+          await _otpService.verifyOTP(widget.email, pinController.text);
+      if (result['success']) {
+        if (mounted) {
+          final authProvider = Provider.of<AuthProvider>(context);
+          Navigator.pushReplacement(
+            context,
+            MaterialPageRoute(builder: (context) => HomeTab()),
+          );
+        }
+      } else {
+        setState(() {
+          _errorMessage = result['message'];
+        });
+      }
+    } catch (e) {
+      setState(() {
+        _errorMessage = 'Lỗi xác thực. Vui lòng thử lại.';
+      });
+    } finally {
+      setState(() {
+        _isLoading = false;
+      });
+    }
+  }
+
+  void _handleResendOTP() {
+    if (_canResend) {
+      setState(() {
+        _remainingTime = 600;
+        _canResend = false;
+      });
+      _sendOTP();
+      _startTimer();
+    }
+  }
 
   @override
   void dispose() {
@@ -55,125 +173,143 @@ class _OtpScreenState extends State<OtpScreen> {
           },
         ),
       ),
-      body: Center(
-        child: SingleChildScrollView(
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              // Hình ảnh (đẩy lên một chút)
-              Transform.translate(
-                offset: const Offset(0, -10), // Di chuyển lên 10px
-                child: SvgPicture.asset(
-                  'assets/icons/otp.svg', // Thay bằng đường dẫn đến hình ảnh của bạn
-                  height: 200,
-                ),
-              ),
-              const SizedBox(height: 24),
-              const Text(
-                'Verify Account!',
-                style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
-              ),
-              const SizedBox(height: 8),
-              Text(
-                'Enter 4-digit Code code we have sent to at',
-                style: TextStyle(fontSize: 16, color: Colors.grey[600]),
-                textAlign: TextAlign.center,
-              ),
-              const SizedBox(height: 8),
-              const Text(
-                'mina@gmail.com', // Thay bằng email của bạn
-                style: TextStyle(
-                  fontSize: 16,
-                  color: Colors.blue,
-                  fontWeight: FontWeight.bold,
-                ),
-                textAlign: TextAlign.center,
-              ),
-              const SizedBox(height: 32),
-              // Các ô nhập mã OTP
-              Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 32.0),
-                child: Form(
-                  key: formKey,
-                  child: Pinput(
-                    length: 6, // Số lượng ô OTP
-                    controller: pinController,
-                    focusNode: focusNode,
-                    defaultPinTheme: defaultPinTheme,
-                    // validator: (value) {
-                    //   // Xử lý validate mã OTP
-                    // },
-                    // onCompleted: (pin) {
-                    //   // Xử lý khi nhập đủ mã OTP
-                    // },
-                    focusedPinTheme: defaultPinTheme.copyWith(
-                      decoration: defaultPinTheme.decoration!.copyWith(
-                        borderRadius: BorderRadius.circular(8),
-                        border: Border.all(color: focusedBorderColor),
-                      ),
-                    ),
-                    submittedPinTheme: defaultPinTheme.copyWith(
-                      decoration: defaultPinTheme.decoration!.copyWith(
-                        color: fillColor,
-                        borderRadius: BorderRadius.circular(19),
-                        border: Border.all(color: focusedBorderColor),
-                      ),
-                    ),
-                    errorPinTheme: defaultPinTheme.copyBorderWith(
-                      border: Border.all(color: Colors.redAccent),
+      body: Stack(
+        children: [
+          Center(
+            child: SingleChildScrollView(
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Transform.translate(
+                    offset: const Offset(0, -10),
+                    child: SvgPicture.asset(
+                      'assets/icons/otp.svg',
+                      height: 200,
                     ),
                   ),
-                ),
-              ),
-              const SizedBox(height: 12),
-              // Nút "Resend Code"
-              TextButton(
-                onPressed: () {
-                  // Xử lý gửi lại mã OTP
-                },
-                child: const Text(
-                  'Resend Code',
-                  style: TextStyle(color: Colors.blue),
-                ),
-              ),
-              const SizedBox(height: 12),
-              // Nút "Verify"
-              Padding(
-                padding: const EdgeInsets.symmetric(
-                    horizontal: 16), // Tạo khoảng cách hai bên
-                child: SizedBox(
-                  width: double.infinity,
-                  height: 48, // Tăng chiều cao để dễ bấm hơn
-                  child: ElevatedButton(
-                    onPressed: () {
-                      Navigator.pushReplacement(
-                        context,
-                        MaterialPageRoute(builder: (context) => HomeTab()),
-                      );
-                    },
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: const Color(0xFF1D61E7),
-                      shape: RoundedRectangleBorder(
-                        borderRadius:
-                            BorderRadius.circular(12), // Bo góc mềm mại
-                      ),
-                      elevation: 6, // Tạo hiệu ứng đổ bóng
-                      shadowColor: Colors.blue.withOpacity(0.3), // Màu bóng nhẹ
+                  const SizedBox(height: 24),
+                  const Text(
+                    'Verify Account!',
+                    style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
+                  ),
+                  const SizedBox(height: 8),
+                  Text(
+                    'Enter 6-digit Code code we have sent to at',
+                    style: TextStyle(fontSize: 16, color: Colors.grey[600]),
+                    textAlign: TextAlign.center,
+                  ),
+                  const SizedBox(height: 8),
+                  Text(
+                    widget.email,
+                    style: const TextStyle(
+                      fontSize: 16,
+                      color: Colors.blue,
+                      fontWeight: FontWeight.bold,
                     ),
-                    child: const Text(
-                      'Verify',
-                      style: TextStyle(
-                        fontSize: 18,
-                        fontWeight: FontWeight.bold,
-                        color: Colors.white,
+                    textAlign: TextAlign.center,
+                  ),
+                  if (_errorMessage != null) ...[
+                    const SizedBox(height: 8),
+                    Text(
+                      _errorMessage!,
+                      style: const TextStyle(color: Colors.red),
+                      textAlign: TextAlign.center,
+                    ),
+                  ],
+                  const SizedBox(height: 32),
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 32.0),
+                    child: Form(
+                      key: formKey,
+                      child: Pinput(
+                        length: 6,
+                        controller: pinController,
+                        focusNode: focusNode,
+                        defaultPinTheme: defaultPinTheme,
+                        enabled: !_isLoading,
+                        focusedPinTheme: defaultPinTheme.copyWith(
+                          decoration: defaultPinTheme.decoration!.copyWith(
+                            borderRadius: BorderRadius.circular(8),
+                            border: Border.all(color: focusedBorderColor),
+                          ),
+                        ),
+                        submittedPinTheme: defaultPinTheme.copyWith(
+                          decoration: defaultPinTheme.decoration!.copyWith(
+                            color: fillColor,
+                            borderRadius: BorderRadius.circular(19),
+                            border: Border.all(color: focusedBorderColor),
+                          ),
+                        ),
+                        errorPinTheme: defaultPinTheme.copyBorderWith(
+                          border: Border.all(color: Colors.redAccent),
+                        ),
                       ),
                     ),
                   ),
-                ),
+                  const SizedBox(height: 12),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Text(
+                        'Time remaining: $_formattedTime',
+                        style: TextStyle(
+                          color: Colors.grey[600],
+                          fontSize: 14,
+                        ),
+                      ),
+                      const SizedBox(width: 8),
+                      TextButton(
+                        onPressed: _canResend ? _handleResendOTP : null,
+                        child: Text(
+                          'Resend Code',
+                          style: TextStyle(
+                            color: _canResend ? Colors.blue : Colors.grey,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 12),
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 16),
+                    child: SizedBox(
+                      width: double.infinity,
+                      height: 48,
+                      child: ElevatedButton(
+                        onPressed: _isLoading ? null : _verifyOTP,
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: const Color(0xFF1D61E7),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                          elevation: 6,
+                          shadowColor: Colors.blue.withOpacity(0.3),
+                        ),
+                        child: _isLoading
+                            ? const SizedBox(
+                                width: 24,
+                                height: 24,
+                                child: CircularProgressIndicator(
+                                  color: Colors.white,
+                                  strokeWidth: 2,
+                                ),
+                              )
+                            : const Text(
+                                'Verify',
+                                style: TextStyle(
+                                  fontSize: 18,
+                                  fontWeight: FontWeight.bold,
+                                  color: Colors.white,
+                                ),
+                              ),
+                      ),
+                    ),
+                  ),
+                ],
               ),
-            ],
+            ),
           ),
-        ),
+        ],
       ),
     );
   }

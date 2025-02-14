@@ -36,7 +36,10 @@ class _SignUpScreenState extends State<SignUpScreen> {
 
       Navigator.pushReplacement(
         context,
-        MaterialPageRoute(builder: (context) => OtpScreen()),
+        MaterialPageRoute(
+            builder: (context) => OtpScreen(
+                  email: _emailController.text,
+                )),
       );
     } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(
