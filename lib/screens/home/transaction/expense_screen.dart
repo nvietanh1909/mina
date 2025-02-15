@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:mina/screens/camera/scan_bill_screen.dart';
+import 'package:mina/services/bill_scanner_service.dart';
 import 'package:provider/provider.dart';
 import 'package:intl/intl.dart';
 import 'package:mina/model/transaction_model.dart';
@@ -52,6 +54,29 @@ class _ExpenseScreenState extends State<ExpenseScreen> {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
               content: Text('Không thể tải danh sách ví: ${e.toString()}')),
+        );
+      }
+    }
+  }
+
+  Future<void> _openBillScanner() async {
+    try {
+      final result = await Navigator.push<BillScanResult>(
+        context,
+        MaterialPageRoute(builder: (context) => const ScanBillScreen()),
+      );
+
+      if (result != null) {
+        setState(() {
+          amountController.text = result.amount.toString();
+          category = result.category;
+          notesController.text = result.notes;
+        });
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Error scanning bill: $e')),
         );
       }
     }
@@ -254,20 +279,11 @@ class _ExpenseScreenState extends State<ExpenseScreen> {
                     ),
                     child: Column(
                       children: [
-                        // NEW: Scan Bill option added here
                         buildSelectableFieldImproved(
                           'Scan Bill',
                           'Tap to scan',
                           Icons.camera_alt,
-                          () {
-                            // TODO: Implement bill scanning functionality
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              const SnackBar(
-                                content: Text(
-                                    'Chức năng quét bill đang được phát triển'),
-                              ),
-                            );
-                          },
+                          _openBillScanner,
                         ),
                         buildDivider(),
                         buildSelectableFieldImproved(
