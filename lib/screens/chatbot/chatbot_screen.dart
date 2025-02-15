@@ -4,6 +4,8 @@ import 'package:mina/provider/auth_provider.dart';
 import 'package:provider/provider.dart';
 import '../../../services/chatbot_service.dart';
 import 'package:intl/intl.dart';
+import 'package:speech_to_text/speech_to_text.dart' as stt;
+import 'package:permission_handler/permission_handler.dart';
 
 class ChatbotScreen extends StatefulWidget {
   const ChatbotScreen({Key? key}) : super(key: key);
@@ -18,6 +20,8 @@ class _ChatbotScreenState extends State<ChatbotScreen>
   final ScrollController _scrollController = ScrollController();
   final ChatbotService _chatbotService = ChatbotService();
 
+  late stt.SpeechToText _speech;
+  bool _isListening = false;
   List<ChatMessage> messages = [];
   bool isLoading = false;
   bool isSending = false;
@@ -32,6 +36,35 @@ class _ChatbotScreenState extends State<ChatbotScreen>
       vsync: this,
       duration: const Duration(milliseconds: 1200),
     )..repeat();
+    _speech = stt.SpeechToText();
+  }
+
+  void _startVoiceInput() async {
+    // Kiểm tra và yêu cầu quyền microphone
+    var status = await Permission.microphone.request();
+    if (status != PermissionStatus.granted) {
+      _showError('Quyền truy cập microphone bị từ chối');
+      return;
+    }
+
+    bool available = await _speech.initialize(
+      onStatus: (val) => print('Voice status: $val'),
+      onError: (val) => print('Voice error: $val'),
+    );
+
+    if (available) {
+      setState(() => _isListening = true);
+      _speech.listen(
+        onResult: (val) {
+          if (val.finalResult) {
+            _messageController.text = val.recognizedWords;
+            setState(() => _isListening = false);
+          }
+        },
+      );
+    } else {
+      _showError('Không thể khởi động trợ lý âm thanh');
+    }
   }
 
   @override
@@ -39,6 +72,7 @@ class _ChatbotScreenState extends State<ChatbotScreen>
     _typeIndicatorController.dispose();
     _messageController.dispose();
     _scrollController.dispose();
+    _speech.cancel();
     super.dispose();
   }
 
@@ -380,6 +414,18 @@ class _ChatbotScreenState extends State<ChatbotScreen>
                         enabled: !isSending,
                         style: const TextStyle(fontSize: 16),
                       ),
+                    ),
+                    IconButton(
+                      icon: Icon(
+                        _isListening ? Icons.stop : Icons.mic,
+                        color: _isListening ? Colors.red : Colors.grey,
+                      ),
+                      onPressed: _isListening
+                          ? () {
+                              _speech.stop();
+                              setState(() => _isListening = false);
+                            }
+                          : _startVoiceInput,
                     ),
                   ],
                 ),

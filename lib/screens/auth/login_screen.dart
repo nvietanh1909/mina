@@ -23,14 +23,43 @@ class _LoginScreenState extends State<LoginScreen> {
   bool _isLoading = false;
   bool _rememberMe = false;
 
+  @override
+  void initState() {
+    super.initState();
+    _checkSavedCredentials();
+  }
+
+  Future<void> _checkSavedCredentials() async {
+    final authProvider = Provider.of<AuthProvider>(context, listen: false);
+    final savedCredentials = await authProvider.getSavedCredentials();
+
+    if (savedCredentials != null) {
+      // Nếu có thông tin đăng nhập đã lưu, tự động đăng nhập
+      try {
+        await authProvider.login(
+            savedCredentials['email']!, savedCredentials['password']!);
+
+        // Chuyển đến màn hình chính
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(builder: (context) => HomeTab()),
+        );
+      } catch (e) {
+        // Đăng nhập tự động thất bại
+        print('Auto login failed: $e');
+      }
+    }
+  }
+
   Future<void> _login() async {
     if (_formKey.currentState!.validate()) {
       setState(() => _isLoading = true);
       try {
-        await _authService.login(
-          _emailController.text,
-          _passwordController.text,
-        );
+        final authProvider = Provider.of<AuthProvider>(context, listen: false);
+        await authProvider.login(
+            _emailController.text, _passwordController.text,
+            rememberMe: _rememberMe);
+
         Navigator.pushReplacement(
           context,
           MaterialPageRoute(builder: (context) => HomeTab()),
@@ -135,7 +164,8 @@ class _LoginScreenState extends State<LoginScreen> {
           children: [
             Checkbox(
               value: _rememberMe,
-              onChanged: (value) => setState(() => _rememberMe = true),
+              onChanged: (value) =>
+                  setState(() => _rememberMe = value ?? false),
             ),
             const Text('Remember me'),
           ],

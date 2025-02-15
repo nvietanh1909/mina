@@ -5,7 +5,7 @@ import 'package:flutter_svg/svg.dart';
 import 'package:http/testing.dart';
 import 'package:mina/model/transaction_model.dart';
 import 'package:mina/screens/account/account_screen.dart';
-import 'package:mina/screens/camera/camera_screen.dart';
+import 'package:mina/screens/camera/scan_bill_screen.dart';
 import 'package:mina/screens/home/transaction/transaction_screen.dart';
 import 'package:mina/screens/profile/profile_screen.dart';
 import 'package:mina/screens/report/report_screen.dart';
