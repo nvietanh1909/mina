@@ -21,12 +21,6 @@ class _AccountScreenState extends State<AccountScreen> {
       child: Scaffold(
         backgroundColor: Colors.white,
         appBar: AppBar(
-          // leading: IconButton(
-          //   icon: const Icon(Icons.search),
-          //   onPressed: () {
-          //     // Handle search action
-          //   },
-          // ),
           title: const Text(
             "Account",
             style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
