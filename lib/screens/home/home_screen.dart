@@ -198,44 +198,57 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
 
   Widget _buildBalanceCard(double totalBalance, double income, double expense) {
     return Container(
-      padding: const EdgeInsets.symmetric(vertical: 30, horizontal: 20),
+      padding: const EdgeInsets.all(24),
       decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(10),
+        gradient: LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: [
+            const Color.fromARGB(255, 32, 32, 56),
+            const Color.fromARGB(255, 55, 50, 111),
+          ],
+        ),
+        borderRadius: BorderRadius.circular(16),
         boxShadow: [
           BoxShadow(
-            color: Colors.grey.withOpacity(0.4),
-            spreadRadius: 2,
-            blurRadius: 8,
-            offset: const Offset(0, 6),
+            color: const Color(0xFF141727).withOpacity(0.2),
+            spreadRadius: 4,
+            blurRadius: 16,
+            offset: const Offset(0, 8),
           ),
         ],
       ),
       child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
         children: [
           const Text(
             "Your total balance",
             style: TextStyle(
-              fontSize: 16,
-              color: Colors.grey,
+              fontSize: 14,
+              color: Colors.white70,
+              fontWeight: FontWeight.w500,
+              letterSpacing: 0.5,
             ),
           ),
-          const SizedBox(height: 10),
+          const SizedBox(height: 12),
           Text(
-            "${NumberFormatter.formatCurrency(totalBalance)}",
+            NumberFormatter.formatCurrency(totalBalance),
             style: const TextStyle(
-              fontSize: 28,
+              fontSize: 26,
+              color: Colors.white,
               fontWeight: FontWeight.bold,
+              letterSpacing: 0.5,
             ),
           ),
           const SizedBox(height: 20),
           Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            mainAxisAlignment: MainAxisAlignment.spaceAround,
             children: [
               _buildBalanceItem(
-                  "Income", income, Colors.green, Icons.arrow_upward),
-              _buildBalanceItem(
-                  "Spend", expense, Colors.red, Icons.arrow_downward),
+                  "Income", income, const Color(0xFF48DC95), Icons.trending_up),
+              Container(height: 40, width: 1, color: Colors.white12),
+              _buildBalanceItem("Spend", expense, const Color(0xFFEF436B),
+                  Icons.trending_down),
             ],
           ),
         ],
@@ -246,18 +259,37 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
   Widget _buildBalanceItem(
       String title, double amount, Color color, IconData icon) {
     return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Row(
-          children: [
-            Icon(icon, color: color),
-            const SizedBox(width: 4),
-            Text(title, style: const TextStyle(color: Colors.grey)),
-          ],
+        Container(
+          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+          decoration: BoxDecoration(
+            color: color.withOpacity(0.1),
+            borderRadius: BorderRadius.circular(12),
+          ),
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Icon(icon, color: color, size: 16),
+              const SizedBox(width: 6),
+              Text(
+                title,
+                style: TextStyle(
+                  color: color,
+                  fontSize: 13,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+            ],
+          ),
         ),
+        const SizedBox(height: 8),
         Text(
-          "${NumberFormatter.formatCurrency(amount)}",
-          style: const TextStyle(fontWeight: FontWeight.w500),
+          NumberFormatter.formatCurrency(amount),
+          style: const TextStyle(
+            color: Colors.white,
+            fontSize: 16,
+            fontWeight: FontWeight.w600,
+          ),
         ),
       ],
     );
@@ -269,45 +301,89 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
         (wallet) => wallet.isDefault,
         orElse: () => walletProvider.wallets.first);
 
-    // Sử dụng monthlyLimit từ ví
     final monthlyLimit = defaultWallet.monthlyLimit;
-
     final limitProgress = (expense / monthlyLimit).clamp(0.0, 1.0);
+    final isNearLimit = limitProgress > 0.8;
 
     return Container(
-      padding: const EdgeInsets.symmetric(vertical: 30, horizontal: 20),
+      padding: const EdgeInsets.all(24),
       decoration: BoxDecoration(
-        color: Colors.black,
-        borderRadius: BorderRadius.circular(10),
+        gradient: LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: isNearLimit
+              ? [const Color(0xFFFF6B6B), const Color(0xFFFF8E8E)]
+              : [
+                  const Color.fromARGB(255, 83, 170, 198),
+                  const Color.fromARGB(255, 31, 101, 194)
+                ],
+        ),
+        borderRadius: BorderRadius.circular(16),
+        boxShadow: [
+          BoxShadow(
+            color: (isNearLimit
+                    ? const Color(0xFF00c6ff)
+                    : const Color(0xFF0072ff))
+                .withOpacity(0.2),
+            spreadRadius: 4,
+            blurRadius: 16,
+            offset: const Offset(0, 8),
+          ),
+        ],
       ),
       child: Column(
         children: [
           const Text(
-            "Limit for this month",
+            "Monthly Limit",
             style: TextStyle(
-              fontSize: 16,
-              color: Colors.white70,
+              fontSize: 14,
+              color: Colors.white,
+              fontWeight: FontWeight.w600,
+              letterSpacing: 0.5,
             ),
           ),
-          const SizedBox(height: 10),
+          const SizedBox(height: 12),
           Text(
-            "${NumberFormatter.formatCurrency(expense)}",
+            NumberFormatter.formatCurrency(expense),
             style: const TextStyle(
-              fontSize: 28,
+              fontSize: 26,
               color: Colors.white,
               fontWeight: FontWeight.bold,
             ),
           ),
-          const SizedBox(height: 20),
-          LinearProgressIndicator(
-            value: limitProgress,
-            backgroundColor: Colors.grey,
-            valueColor: const AlwaysStoppedAnimation<Color>(Colors.white),
+          const SizedBox(height: 16),
+          ClipRRect(
+            borderRadius: BorderRadius.circular(8),
+            child: LinearProgressIndicator(
+              value: limitProgress,
+              minHeight: 8,
+              backgroundColor: Colors.white.withOpacity(0.2),
+              valueColor: AlwaysStoppedAnimation<Color>(
+                isNearLimit ? Colors.red.shade100 : Colors.white,
+              ),
+            ),
           ),
-          const SizedBox(height: 5),
-          Text(
-            "${NumberFormatter.formatNumber(expense)} / ${NumberFormatter.formatNumber(monthlyLimit)}",
-            style: const TextStyle(color: Colors.white),
+          const SizedBox(height: 8),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Text(
+                "${(limitProgress * 100).toInt()}% used",
+                style: TextStyle(
+                  color: Colors.white.withOpacity(0.9),
+                  fontSize: 12,
+                  fontWeight: FontWeight.w500,
+                ),
+              ),
+              Text(
+                "Limit: ${NumberFormatter.formatCurrency(monthlyLimit)}",
+                style: TextStyle(
+                  color: Colors.white.withOpacity(0.9),
+                  fontSize: 12,
+                  fontWeight: FontWeight.w500,
+                ),
+              ),
+            ],
           ),
         ],
       ),
@@ -333,7 +409,7 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
                 children: incomeTransactions
                     .map(
                       (transaction) => _buildTransactionItem(
-                        icon: Icons.payments,
+                        icon: Icons.payment,
                         title: transaction.category ?? 'Income',
                         date:
                             DateFormat('dd MMM yyyy').format(transaction.date),
