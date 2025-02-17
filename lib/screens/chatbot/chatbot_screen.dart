@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_svg/svg.dart';
 import 'package:mina/model/chat_message.dart';
 import 'package:mina/provider/auth_provider.dart';
 import 'package:provider/provider.dart';
@@ -174,6 +175,7 @@ class _ChatbotScreenState extends State<ChatbotScreen>
 
     if (!authProvider.isLoggedIn) {
       return Scaffold(
+        backgroundColor: Colors.white,
         appBar: _buildAppBar(),
         body: Center(
           child: Container(
@@ -233,37 +235,49 @@ class _ChatbotScreenState extends State<ChatbotScreen>
   PreferredSizeWidget _buildAppBar() {
     return AppBar(
       elevation: 0,
-      centerTitle: true,
-      title: const Text(
-        'Mina Chatbot',
-        style: TextStyle(
-          color: Colors.white,
-          fontWeight: FontWeight.w600,
-        ),
-      ),
-      backgroundColor: const Color.fromARGB(255, 43, 43, 43),
+      backgroundColor: Colors.white,
       leading: IconButton(
-        icon: const Icon(Icons.arrow_back, color: Colors.white), // Màu trắng
-        onPressed: () {
-          Navigator.of(context).pop();
-        },
+        icon: const Icon(Icons.arrow_back, color: Colors.black54),
+        onPressed: () => Navigator.of(context).pop(),
       ),
-      actions: [
-        if (isLoading)
-          const Padding(
-            padding: EdgeInsets.only(right: 16.0),
-            child: Center(
-              child: SizedBox(
-                width: 20,
-                height: 20,
-                child: CircularProgressIndicator(
-                  strokeWidth: 2,
-                  color: Colors.white,
-                ),
-              ),
+      title: Row(
+        children: [
+          Container(
+            width: 40,
+            height: 40,
+            decoration: BoxDecoration(
+              color: Colors.blue,
+              borderRadius: BorderRadius.circular(12),
+            ),
+            child: const Icon(
+              Icons.person,
+              color: Colors.white,
+              size: 24,
             ),
           ),
-      ],
+          const SizedBox(width: 12),
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              const Text(
+                'Mina',
+                style: TextStyle(
+                  color: Color.fromARGB(255, 18, 18, 18),
+                  fontSize: 16,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+              Text(
+                'Active',
+                style: TextStyle(
+                  color: Colors.green,
+                  fontSize: 12,
+                ),
+              ),
+            ],
+          ),
+        ],
+      ),
     );
   }
 
@@ -272,11 +286,10 @@ class _ChatbotScreenState extends State<ChatbotScreen>
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          Icon(
-            Icons.chat_bubble_outline,
-            size: 64,
-            color: const Color(0xFF38BDF8),
-          ),
+          SvgPicture.asset('assets/icons/chatbot.svg',
+              width: 140,
+              height: 140,
+              color: const Color.fromARGB(255, 76, 169, 245)),
           const SizedBox(height: 16),
           const Text(
             'Ask me about your financial management!',
@@ -467,57 +480,66 @@ class _ChatBubble extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Align(
-      alignment: message.isUser ? Alignment.centerRight : Alignment.centerLeft,
-      child: Container(
-        margin: EdgeInsets.only(
-          bottom: 4,
-          left: message.isUser ? 64 : 0,
-          right: message.isUser ? 0 : 64,
-        ),
-        child: Column(
-          crossAxisAlignment: message.isUser
-              ? CrossAxisAlignment.end
-              : CrossAxisAlignment.start,
-          children: [
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 12),
+      child: Row(
+        mainAxisAlignment:
+            message.isUser ? MainAxisAlignment.end : MainAxisAlignment.start,
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          if (!message.isUser) ...[
             Container(
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+              width: 40,
+              height: 40,
+              margin: const EdgeInsets.only(right: 8),
               decoration: BoxDecoration(
-                color: message.isUser
-                    ? const Color(0xFF38BDF8)
-                    : const Color.fromARGB(255, 238, 236, 236),
-                borderRadius: BorderRadius.circular(20).copyWith(
-                  bottomRight: message.isUser ? Radius.zero : null,
-                  bottomLeft: !message.isUser ? Radius.zero : null,
-                ),
-                boxShadow: [
-                  BoxShadow(
-                    offset: const Offset(0, 2),
-                    blurRadius: 6,
-                    color: Colors.black.withOpacity(0.06),
-                  ),
-                ],
+                color: Colors.blue,
+                borderRadius: BorderRadius.circular(12),
               ),
-              child: Text(
-                message.isUser ? message.message : message.response,
-                style: TextStyle(
-                  color: message.isUser ? Colors.white : Colors.black87,
-                  fontSize: 16,
-                ),
-              ),
-            ),
-            Padding(
-              padding: const EdgeInsets.only(top: 4, left: 4, right: 4),
-              child: Text(
-                DateFormat('HH:mm').format(message.createdAt),
-                style: TextStyle(
-                  color: Colors.grey[600],
-                  fontSize: 12,
-                ),
+              child: const Icon(
+                Icons.person,
+                color: Colors.white,
+                size: 24,
               ),
             ),
           ],
-        ),
+          Flexible(
+            child: Column(
+              crossAxisAlignment: message.isUser
+                  ? CrossAxisAlignment.end
+                  : CrossAxisAlignment.start,
+              children: [
+                Container(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 16,
+                    vertical: 12,
+                  ),
+                  decoration: BoxDecoration(
+                    color: message.isUser ? Colors.blue : Colors.grey[100],
+                    borderRadius: BorderRadius.circular(20),
+                  ),
+                  child: Text(
+                    message.isUser ? message.message : message.response,
+                    style: TextStyle(
+                      color: message.isUser ? Colors.white : Colors.black87,
+                      fontSize: 16,
+                    ),
+                  ),
+                ),
+                Padding(
+                  padding: const EdgeInsets.only(top: 4),
+                  child: Text(
+                    DateFormat('HH:mm').format(message.createdAt),
+                    style: TextStyle(
+                      color: Colors.grey[600],
+                      fontSize: 12,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
       ),
     );
   }

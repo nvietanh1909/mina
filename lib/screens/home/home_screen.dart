@@ -55,7 +55,6 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
       final walletProvider =
           Provider.of<WalletProvider>(context, listen: false);
 
-      // Load wallets
       await walletProvider.loadWallets();
 
       if (walletProvider.wallets.isEmpty) {
@@ -314,8 +313,8 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
           colors: isNearLimit
               ? [const Color(0xFFFF6B6B), const Color(0xFFFF8E8E)]
               : [
-                  const Color.fromARGB(255, 83, 170, 198),
-                  const Color.fromARGB(255, 31, 101, 194)
+                  const Color.fromARGB(255, 72, 133, 232),
+                  const Color.fromARGB(255, 15, 64, 127)
                 ],
         ),
         borderRadius: BorderRadius.circular(16),
@@ -337,8 +336,8 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
             "Monthly Limit",
             style: TextStyle(
               fontSize: 14,
-              color: Colors.white,
-              fontWeight: FontWeight.w600,
+              color: Colors.white70,
+              fontWeight: FontWeight.w500,
               letterSpacing: 0.5,
             ),
           ),
