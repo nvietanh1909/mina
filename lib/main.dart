@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:mina/provider/category_provider.dart';
 import 'package:mina/screens/chatbot/chatbot_screen.dart';
 import 'package:mina/provider/transaction_provider.dart';
@@ -14,6 +15,7 @@ void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   final authProvider = AuthProvider();
   await authProvider.loadUser();
+  await dotenv.load(fileName: ".env");
 
   runApp(
     MultiProvider(

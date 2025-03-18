@@ -311,7 +311,7 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
           colors: isNearLimit
-              ? [const Color(0xFFFF6B6B), const Color(0xFFFF8E8E)]
+              ? [const Color(0xFF66023c), const Color(0xFFcd1c18)]
               : [
                   const Color.fromARGB(255, 72, 133, 232),
                   const Color.fromARGB(255, 15, 64, 127)

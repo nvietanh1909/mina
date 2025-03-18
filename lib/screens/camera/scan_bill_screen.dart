@@ -20,7 +20,6 @@ class _ScanBillScreenState extends State<ScanBillScreen> {
   @override
   void initState() {
     super.initState();
-    // Gọi chức năng chụp ảnh ngay khi màn hình được khởi tạo
     _takePicture();
   }
 

@@ -28,17 +28,14 @@ class _SignUpScreenState extends State<SignUpScreen> {
 
     setState(() => _isLoading = true);
     try {
-      await _authService.register(
-        _firstNameController.text + " " + _lastNameController.text,
-        _emailController.text,
-        _passwordController.text,
-      );
-
       Navigator.pushReplacement(
         context,
         MaterialPageRoute(
             builder: (context) => OtpScreen(
                   email: _emailController.text,
+                  firstName: _firstNameController.text,
+                  lastName: _lastNameController.text,
+                  password: _passwordController.text,
                 )),
       );
     } catch (e) {

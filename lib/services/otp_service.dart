@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'dart:ffi';
 import 'package:http/http.dart' as http;
 import 'package:mina/constans/constants.dart';
 
@@ -28,7 +29,7 @@ class OTPService {
   }
 
   // Xác thực OTP
-  Future<Map<String, dynamic>> verifyOTP(String email, String otp) async {
+  Future<Map<String, dynamic>> verifyOTP(String email, int otp) async {
     try {
       final response = await http.post(
         Uri.parse('$baseUrl/api/otp/verify'),

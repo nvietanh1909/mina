@@ -45,6 +45,7 @@ dependencies:
   image:
   speech_to_text:
   permission_handler:
+  flutter_dotenv: ^5.2.1
   
 dev_dependencies:
   flutter_test:
@@ -77,3 +78,4 @@ flutter:
     - assets/icons/camera.svg
     - assets/tessdata/vie.traineddata
     - assets/tessdata/eng.traineddata
+    - .env

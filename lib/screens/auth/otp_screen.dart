@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:mina/provider/auth_provider.dart';
 import 'package:mina/screens/auth/login_screen.dart';
+import 'package:mina/services/api_service.dart';
 import 'package:pinput/pinput.dart';
 import 'package:provider/provider.dart';
 import 'signup_screen.dart';
@@ -10,10 +11,16 @@ import 'package:mina/services/otp_service.dart';
 
 class OtpScreen extends StatefulWidget {
   final String email;
+  final String firstName;
+  final String lastName;
+  final String password;
 
   const OtpScreen({
     Key? key,
     required this.email,
+    required this.firstName,
+    required this.lastName,
+    required this.password,
   }) : super(key: key);
 
   @override
@@ -25,6 +32,7 @@ class _OtpScreenState extends State<OtpScreen> {
   final focusNode = FocusNode();
   final formKey = GlobalKey<FormState>();
   final OTPService _otpService = OTPService();
+  final _authService = AuthService();
 
   bool _isLoading = false;
   String? _errorMessage;
@@ -97,11 +105,18 @@ class _OtpScreenState extends State<OtpScreen> {
     });
 
     try {
+      int otpCode = int.tryParse(pinController.text) ?? 0; 
+      print(otpCode);
       final result =
-          await _otpService.verifyOTP(widget.email, pinController.text);
-      if (result['success']) {
+          await _otpService.verifyOTP(widget.email, otpCode);
+      if (result['success'] == true) {
         if (mounted) {
           final authProvider = Provider.of<AuthProvider>(context);
+          await _authService.register(
+            "${widget.firstName} ${widget.lastName}",
+            widget.email,
+            widget.password,
+          );
           Navigator.pushReplacement(
             context,
             MaterialPageRoute(builder: (context) => HomeTab()),
