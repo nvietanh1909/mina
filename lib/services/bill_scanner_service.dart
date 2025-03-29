@@ -1,16 +1,19 @@
 import 'dart:io';
 import 'package:http/http.dart' as http;
+import 'package:intl/intl.dart';
 import 'package:mina/services/api_service.dart';
 import 'dart:convert';
-import 'package:mina/services/vision_api.dart'; // Import Google Vision API
+import 'package:mina/services/vision_api.dart'; 
 
 class BillScanResult {
   final double amount;
+  final DateFormat date;
   final String category;
   final String notes;
 
   BillScanResult({
     required this.amount,
+    required this.date,
     required this.category,
     required this.notes,
   });
@@ -18,6 +21,7 @@ class BillScanResult {
   factory BillScanResult.fromJson(Map<String, dynamic> json) {
     return BillScanResult(
       amount: json['amount'].toDouble(),
+      date: json['date'],
       category: json['category'],
       notes: json['notes'],
     );

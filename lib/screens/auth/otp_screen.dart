@@ -105,10 +105,20 @@ class _OtpScreenState extends State<OtpScreen> {
     });
 
     try {
-      int otpCode = int.tryParse(pinController.text) ?? 0; 
-      print(otpCode);
-      final result =
-          await _otpService.verifyOTP(widget.email, otpCode);
+      int otpValue = int.tryParse(pinController.text) ?? 0;
+      if (otpValue == 0) {
+        setState(() {
+          _errorMessage = 'Mã OTP không hợp lệ';
+        });
+        return;
+      }
+
+      String otpCode = otpValue.toString();
+      print('Verifying OTP: $otpCode (${otpCode.runtimeType})');
+
+      final result = await _otpService.verifyOTP(widget.email, otpCode);
+      print('Verify result: $result');
+
       if (result['success'] == true) {
         if (mounted) {
           final authProvider = Provider.of<AuthProvider>(context);

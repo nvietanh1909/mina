@@ -29,8 +29,10 @@ class OTPService {
   }
 
   // Xác thực OTP
-  Future<Map<String, dynamic>> verifyOTP(String email, int otp) async {
+  Future<Map<String, dynamic>> verifyOTP(String email, String otp) async {
     try {
+      print('Frontend - Sending OTP: $otp (${otp.runtimeType})');
+
       final response = await http.post(
         Uri.parse('$baseUrl/api/otp/verify'),
         headers: {'Content-Type': 'application/json'},
@@ -40,12 +42,16 @@ class OTPService {
         }),
       );
 
+      print('Frontend - Response status: ${response.statusCode}');
+      print('Frontend - Response body: ${response.body}');
+
       if (response.statusCode == 200) {
         return jsonDecode(response.body);
       } else {
         throw Exception('Failed to verify OTP');
       }
     } catch (e) {
+      print('Frontend - Error: $e');
       return {
         'success': false,
         'message': e.toString(),
