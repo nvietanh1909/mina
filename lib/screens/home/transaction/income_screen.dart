@@ -8,6 +8,7 @@ import 'package:mina/provider/transaction_provider.dart';
 import 'package:mina/provider/wallet_provider.dart';
 import 'package:mina/screens/home/category/category_screen.dart';
 import 'package:mina/screens/home/date/date_screen.dart';
+import 'package:mina/screens/account/account_screen.dart';
 
 class IncomeScreen extends StatefulWidget {
   const IncomeScreen({super.key});
@@ -21,6 +22,7 @@ class _IncomeScreenState extends State<IncomeScreen> {
   TextEditingController notesController = TextEditingController();
   String category = 'CHOOSE';
   String categoryId = '';
+  String categoryIcon = '';
   String date = DateFormat('d MMM yyyy').format(DateTime.now());
   String selectedWalletId = '';
   String selectedWalletName = 'Choose Wallet';
@@ -111,24 +113,36 @@ class _IncomeScreenState extends State<IncomeScreen> {
         category: category,
         date: DateFormat('d MMM yyyy').parse(date),
         notes: notesController.text,
+        icon: categoryIcon,
       );
 
-      await context.read<TransactionProvider>().createTransaction(transaction);
+      // Create transaction first
+      final createdTransaction = await context
+          .read<TransactionProvider>()
+          .createTransaction(transaction);
 
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Thêm chi tiêu thành công')),
-        );
-
-        // Reset các trường thông tin
-        setState(() {
-          amountController.text = "0";
-          notesController.text = "";
-          category = 'CHOOSE';
-          categoryId = '';
-          date = DateFormat('d MMM yyyy').format(DateTime.now());
-        });
+      if (createdTransaction == null) {
+        throw Exception('Không thể tạo giao dịch');
       }
+
+      // Update wallet balance and fetch transactions
+      final walletProvider = context.read<WalletProvider>();
+      final transactionProvider = context.read<TransactionProvider>();
+
+      await Future.wait([
+        walletProvider.loadWallets(), // Refresh wallet data
+        transactionProvider.fetchTransactions(), // Fetch latest transactions
+      ]);
+
+      if (!mounted) return;
+
+      // Show success message before popping
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Thêm thu nhập thành công')),
+      );
+
+      // Pop back to previous screen with created transaction
+      Navigator.of(context).pop(createdTransaction);
     } catch (e) {
       print('Error in _saveExpense: $e');
       if (mounted) {
@@ -292,6 +306,7 @@ class _IncomeScreenState extends State<IncomeScreen> {
                               setState(() {
                                 category = result['name'];
                                 categoryId = result['id'];
+                                categoryIcon = result['icon'];
                               });
                             }
                           },
@@ -477,13 +492,25 @@ class _IncomeScreenState extends State<IncomeScreen> {
                     ),
                   ),
                   const SizedBox(height: 4),
-                  Text(
-                    value,
-                    style: TextStyle(
-                      fontSize: 16,
-                      fontWeight: FontWeight.w500,
-                      color: textColor,
-                    ),
+                  Row(
+                    children: [
+                      if (label == 'Category' && categoryIcon.isNotEmpty)
+                        Container(
+                          margin: const EdgeInsets.only(right: 8),
+                          child: Text(
+                            categoryIcon,
+                            style: const TextStyle(fontSize: 20),
+                          ),
+                        ),
+                      Text(
+                        value,
+                        style: TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.w500,
+                          color: textColor,
+                        ),
+                      ),
+                    ],
                   ),
                 ],
               ),

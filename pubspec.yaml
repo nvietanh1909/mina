@@ -46,6 +46,8 @@ dependencies:
   speech_to_text:
   permission_handler:
   flutter_dotenv: ^5.2.1
+  sqflite: ^2.3.2
+  path: ^1.8.3
   
 dev_dependencies:
   flutter_test:

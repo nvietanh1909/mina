@@ -34,48 +34,12 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
     WidgetsBinding.instance.addPostFrameCallback((_) {
       _loadInitialData();
     });
-    _autoLoadWallet();
-    _loadInitialData();
-  }
-
-  @override
-  void dispose() {
-    WidgetsBinding.instance.removeObserver(this);
-    super.dispose();
   }
 
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
     _loadInitialData();
-  }
-
-  Future<void> _autoLoadWallet() async {
-    try {
-      final walletProvider =
-          Provider.of<WalletProvider>(context, listen: false);
-
-      await walletProvider.loadWallets();
-
-      if (walletProvider.wallets.isEmpty) {
-        print('No wallets available');
-        return;
-      }
-
-      // Load transactions sau khi có wallets
-      final transactionProvider =
-          Provider.of<TransactionProvider>(context, listen: false);
-      await transactionProvider.fetchTransactions();
-
-      setState(() {
-        _isLoading = false;
-      });
-    } catch (e) {
-      print('Error loading initial data: $e');
-      setState(() {
-        _isLoading = false;
-      });
-    }
   }
 
   @override
@@ -85,43 +49,32 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
     }
   }
 
+  @override
+  void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
+    super.dispose();
+  }
+
   Future<void> _loadInitialData() async {
     try {
       setState(() => _isLoading = true);
-      await _loadData();
-    } finally {
-      if (mounted) {
-        setState(() => _isLoading = false);
-      }
-    }
-  }
 
-  Future<void> _loadData() async {
-    try {
-      print('HomeScreen: Loading data...');
-      // Đảm bảo providers được khởi tạo
+      // Load both wallets and transactions
       final transactionProvider =
           Provider.of<TransactionProvider>(context, listen: false);
       final walletProvider =
           Provider.of<WalletProvider>(context, listen: false);
 
-      final defaultWallet = walletProvider.wallets.firstWhere(
-          (wallet) => wallet.isDefault,
-          orElse: () => walletProvider.wallets.first);
-      final monthlyLimit = defaultWallet.monthlyLimit;
-
       await Future.wait([
         walletProvider.loadWallets(),
-        transactionProvider.fetchTransactions()
+        transactionProvider.fetchTransactions(),
       ]);
-
-      // Log kết quả
-      print('Wallets loaded: ${walletProvider.wallets.length}');
-      print('Transactions loaded: ${transactionProvider.transactions.length}');
-      print('Monthly limit: ${monthlyLimit}');
     } catch (e) {
-      print('Error loading data: $e');
-      rethrow;
+      print('Error loading initial data: $e');
+    } finally {
+      if (mounted) {
+        setState(() => _isLoading = false);
+      }
     }
   }
 
@@ -137,7 +90,7 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
         ),
       ),
       body: RefreshIndicator(
-        onRefresh: _loadData,
+        onRefresh: _loadInitialData,
         child: _isLoading
             ? const Center(child: CircularProgressIndicator())
             : Consumer2<WalletProvider, TransactionProvider>(
@@ -408,12 +361,7 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
                 children: incomeTransactions
                     .map(
                       (transaction) => _buildTransactionItem(
-                        icon: Icons.payment,
-                        title: transaction.category ?? 'Income',
-                        date:
-                            DateFormat('dd MMM yyyy').format(transaction.date),
-                        amount:
-                            "+ ${NumberFormatter.formatCurrency(transaction.amount)}",
+                        transaction: transaction,
                       ),
                     )
                     .toList(),
@@ -431,12 +379,7 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
                 children: expenseTransactions
                     .map(
                       (transaction) => _buildTransactionItem(
-                        icon: Icons.shopping_cart,
-                        title: transaction.category ?? 'Expense',
-                        date:
-                            DateFormat('dd MMM yyyy').format(transaction.date),
-                        amount:
-                            "- ${NumberFormatter.formatCurrency(transaction.amount)}",
+                        transaction: transaction,
                       ),
                     )
                     .toList(),
@@ -446,28 +389,53 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
   }
 
   Widget _buildTransactionItem({
-    required IconData icon,
-    required String title,
-    required String date,
-    required String amount,
+    required Transaction transaction,
   }) {
+    final bool isIncome = transaction.type == 'income';
+    final String amount =
+        "${isIncome ? "+" : "-"} ${NumberFormatter.formatCurrency(transaction.amount)}";
+
     return Padding(
       padding: const EdgeInsets.only(bottom: 8.0),
       child: Row(
         children: [
-          Icon(icon),
+          Container(
+            width: 40,
+            height: 40,
+            decoration: BoxDecoration(
+              color: isIncome
+                  ? Colors.green.withOpacity(0.1)
+                  : Colors.red.withOpacity(0.1),
+              borderRadius: BorderRadius.circular(20),
+            ),
+            child: Center(
+              child: transaction.icon != null
+                  ? Text(
+                      transaction.icon!,
+                      style: const TextStyle(fontSize: 20),
+                    )
+                  : Icon(
+                      isIncome ? Icons.payment : Icons.shopping_cart,
+                      color: isIncome ? Colors.green : Colors.red,
+                      size: 20,
+                    ),
+            ),
+          ),
           const SizedBox(width: 16),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  title,
+                  transaction.notes?.isNotEmpty == true
+                      ? transaction.notes!
+                      : transaction.category ??
+                          (isIncome ? 'Income' : 'Expense'),
                   style: const TextStyle(fontWeight: FontWeight.bold),
                   overflow: TextOverflow.ellipsis,
                 ),
                 Text(
-                  date,
+                  DateFormat('dd MMM yyyy').format(transaction.date),
                   style: const TextStyle(color: Colors.grey),
                 ),
               ],
@@ -476,7 +444,7 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
           Text(
             amount,
             style: TextStyle(
-              color: amount.startsWith("+") ? Colors.green : Colors.red,
+              color: isIncome ? Colors.green : Colors.red,
               fontWeight: FontWeight.w500,
             ),
           ),

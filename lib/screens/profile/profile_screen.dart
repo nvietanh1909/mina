@@ -12,30 +12,69 @@ class ProfileScreen extends StatefulWidget {
   State<ProfileScreen> createState() => _ProfileScreenState();
 }
 
-class _ProfileScreenState extends State<ProfileScreen> {
+class _ProfileScreenState extends State<ProfileScreen>
+    with WidgetsBindingObserver {
   bool _notificationsEnabled = true;
-  bool _darkModeEnabled = false;
   User? _user;
   bool _isLoading = true;
+  String? _error;
+  bool _isInitialized = false;
 
   @override
   void initState() {
     super.initState();
-    _fetchProfile();
+    WidgetsBinding.instance.addObserver(this);
+  }
+
+  @override
+  void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
+    super.dispose();
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state == AppLifecycleState.resumed) {
+      _fetchProfile();
+    }
+  }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    if (!_isInitialized) {
+      _isInitialized = true;
+      _fetchProfile();
+    }
   }
 
   Future<void> _fetchProfile() async {
+    if (!mounted) return;
+
+    setState(() {
+      _isLoading = true;
+      _error = null;
+    });
+
     try {
       final user = await AuthService().getProfile();
+      if (!mounted) return;
+
       setState(() {
         _user = user;
         _isLoading = false;
+        _error = null;
       });
     } catch (e) {
+      if (!mounted) return;
+
       setState(() {
+        _error = e.toString();
         _isLoading = false;
       });
-      print('Lỗi khi lấy profile: $e');
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Lỗi khi lấy profile: $e')),
+      );
     }
   }
 
@@ -43,107 +82,252 @@ class _ProfileScreenState extends State<ProfileScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: Colors.white,
-      appBar: PreferredSize(
-        preferredSize: Size.zero,
-        child: AppBar(
-          backgroundColor: Colors.white,
-          elevation: 0,
-        ),
-      ),
-      body: SingleChildScrollView(
-        padding: const EdgeInsets.all(16.0),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            // Hiển thị loading hoặc dữ liệu
-            _isLoading
-                ? const Center(
-                    child:
-                        CircularProgressIndicator()) // Hiển thị vòng xoay loading
-                : Padding(
-                    padding: const EdgeInsets.only(top: 34.0),
-                    child: Row(
-                      children: [
-                        const CircleAvatar(
-                          radius: 30,
-                          child: Icon(Icons.person, size: 40),
-                        ),
-                        const SizedBox(width: 16),
-                        Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              _user?.name ?? 'N/A',
-                              style: const TextStyle(
-                                  fontWeight: FontWeight.bold, fontSize: 18),
-                            ),
-                            Text(_user?.email ?? 'N/A'),
-                          ],
-                        ),
-                      ],
+      body: RefreshIndicator(
+        onRefresh: _fetchProfile,
+        child: _isLoading
+            ? const Center(child: CircularProgressIndicator())
+            : Stack(
+                children: [
+                  // Background gradient
+                  Container(
+                    height: 300,
+                    decoration: const BoxDecoration(
+                      gradient: LinearGradient(
+                        begin: Alignment.topLeft,
+                        end: Alignment.bottomRight,
+                        colors: [
+                          Color(0xFF6355E4),
+                          Color(0xFF4599C8),
+                        ],
+                      ),
                     ),
                   ),
+                  SafeArea(
+                    child: SingleChildScrollView(
+                      physics: const AlwaysScrollableScrollPhysics(),
+                      child: Column(
+                        children: [
+                          const SizedBox(height: 20),
+                          // Profile Section
+                          Center(
+                            child: Column(
+                              children: [
+                                Stack(
+                                  children: [
+                                    Container(
+                                      width: 100,
+                                      height: 100,
+                                      decoration: BoxDecoration(
+                                        shape: BoxShape.circle,
+                                        color: Colors.white,
+                                        border: Border.all(
+                                          color: Colors.white,
+                                          width: 3,
+                                        ),
+                                        boxShadow: [
+                                          BoxShadow(
+                                            color:
+                                                Colors.black.withOpacity(0.1),
+                                            blurRadius: 10,
+                                            spreadRadius: 1,
+                                          ),
+                                        ],
+                                      ),
+                                      child: const Icon(
+                                        Icons.person,
+                                        size: 50,
+                                        color: Color(0xFF7B6EF6),
+                                      ),
+                                    ),
+                                    if (_error != null)
+                                      Positioned(
+                                        right: 0,
+                                        bottom: 0,
+                                        child: Container(
+                                          width: 32,
+                                          height: 32,
+                                          decoration: BoxDecoration(
+                                            color: Colors.white,
+                                            shape: BoxShape.circle,
+                                            boxShadow: [
+                                              BoxShadow(
+                                                color: Colors.black
+                                                    .withOpacity(0.1),
+                                                blurRadius: 4,
+                                                spreadRadius: 1,
+                                              ),
+                                            ],
+                                          ),
+                                          child: IconButton(
+                                            padding: EdgeInsets.zero,
+                                            icon: const Icon(Icons.refresh,
+                                                size: 20),
+                                            color: const Color(0xFF7B6EF6),
+                                            onPressed: _fetchProfile,
+                                          ),
+                                        ),
+                                      ),
+                                  ],
+                                ),
+                                const SizedBox(height: 16),
+                                Text(
+                                  _user?.name ?? 'Loading...',
+                                  style: const TextStyle(
+                                    fontSize: 24,
+                                    fontWeight: FontWeight.bold,
+                                    color: Colors.white,
+                                  ),
+                                ),
+                                const SizedBox(height: 8),
+                                Text(
+                                  _user?.email ?? 'Loading...',
+                                  style: const TextStyle(
+                                    fontSize: 16,
+                                    color: Colors.white,
+                                    fontWeight: FontWeight.w500,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                          const SizedBox(height: 30),
+                          // Settings Card
+                          Container(
+                            margin: const EdgeInsets.symmetric(horizontal: 20),
+                            decoration: BoxDecoration(
+                              color: Colors.white,
+                              borderRadius: BorderRadius.circular(20),
+                              boxShadow: [
+                                BoxShadow(
+                                  color: Colors.black.withOpacity(0.05),
+                                  blurRadius: 10,
+                                  spreadRadius: 0,
+                                  offset: const Offset(0, 2),
+                                ),
+                              ],
+                            ),
+                            child: Column(
+                              children: [
+                                _buildSettingRow(
+                                  icon: Icons.notifications_outlined,
+                                  iconBackground: const Color(0xFFF3F1FE),
+                                  iconColor: const Color(0xFF7B6EF6),
+                                  title: 'Notifications',
+                                  subtitle: 'Manage your notifications',
+                                  trailing: Switch(
+                                    value: _notificationsEnabled,
+                                    onChanged: (value) {
+                                      setState(() {
+                                        _notificationsEnabled = value;
+                                      });
+                                    },
+                                    activeColor: const Color(0xFF7B6EF6),
+                                  ),
+                                ),
+                                _buildDivider(),
+                                _buildSettingRow(
+                                  icon: Icons.lock_outline,
+                                  iconBackground: const Color(0xFFF3F1FE),
+                                  iconColor: const Color(0xFF7B6EF6),
+                                  title: 'Change Password',
+                                  subtitle: 'Update your password',
+                                  trailing: const Icon(
+                                    Icons.arrow_forward_ios,
+                                    size: 16,
+                                    color: Colors.grey,
+                                  ),
+                                ),
+                                _buildDivider(),
+                                _buildSettingRow(
+                                  icon: Icons.logout,
+                                  iconBackground: const Color(0xFFF3F1FE),
+                                  iconColor: const Color(0xFF7B6EF6),
+                                  title: 'Log out',
+                                  subtitle: 'Sign out of your account',
+                                  trailing: const Icon(
+                                    Icons.arrow_forward_ios,
+                                    size: 16,
+                                    color: Colors.grey,
+                                  ),
+                                  onTap: () => _showLogoutDialog(context),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+      ),
+    );
+  }
 
-            const SizedBox(height: 30),
-
-            _buildSettingRow(
-              title: 'Notifications',
-              trailing: Switch(
-                value: _notificationsEnabled,
-                onChanged: (value) {
-                  setState(() {
-                    _notificationsEnabled = value;
-                  });
-                },
+  Widget _buildSettingRow({
+    required IconData icon,
+    required Color iconBackground,
+    required Color iconColor,
+    required String title,
+    required String subtitle,
+    required Widget trailing,
+    Function()? onTap,
+  }) {
+    return InkWell(
+      onTap: onTap,
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
+        child: Row(
+          children: [
+            Container(
+              padding: const EdgeInsets.all(10),
+              decoration: BoxDecoration(
+                color: iconBackground,
+                borderRadius: BorderRadius.circular(12),
+              ),
+              child: Icon(
+                icon,
+                color: iconColor,
+                size: 24,
               ),
             ),
-            _buildSettingRow(
-              title: 'Language',
-              trailing: const Text('EN'),
-            ),
-            _buildSettingRow(
-              title: 'Dark mode',
-              trailing: Switch(
-                value: _darkModeEnabled,
-                onChanged: (value) {
-                  setState(() {
-                    _darkModeEnabled = value;
-                  });
-                },
+            const SizedBox(width: 16),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    title,
+                    style: const TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.w600,
+                      color: Color(0xFF2D3142),
+                    ),
+                  ),
+                  const SizedBox(height: 4),
+                  Text(
+                    subtitle,
+                    style: TextStyle(
+                      fontSize: 14,
+                      color: Colors.grey[600],
+                    ),
+                  ),
+                ],
               ),
             ),
-            _buildSettingRow(
-              title: 'Currency',
-              trailing: const Text('\₫'),
-            ),
-            _buildSettingRow(
-              title: 'Change Password',
-              trailing: const Icon(Icons.arrow_forward_ios, size: 16),
-            ),
-            _buildSettingRow(
-              title: 'Log out',
-              trailing: const Icon(Icons.logout),
-              onTap: () => _showLogoutDialog(context),
-            ),
+            trailing,
           ],
         ),
       ),
     );
   }
 
-  Widget _buildSettingRow(
-      {required String title, required Widget trailing, Function()? onTap}) {
+  Widget _buildDivider() {
     return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 14.0),
-      child: GestureDetector(
-        onTap: onTap,
-        child: Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          children: [
-            Text(title),
-            trailing,
-          ],
-        ),
+      padding: const EdgeInsets.symmetric(horizontal: 20),
+      child: Divider(
+        height: 1,
+        color: Colors.grey[200],
       ),
     );
   }
@@ -160,44 +344,44 @@ class _ProfileScreenState extends State<ProfileScreen> {
           elevation: 0,
           backgroundColor: Colors.transparent,
           child: Container(
-            padding: const EdgeInsets.all(20),
+            padding: const EdgeInsets.all(24),
             decoration: BoxDecoration(
               color: Colors.white,
               shape: BoxShape.rectangle,
               borderRadius: BorderRadius.circular(20),
               boxShadow: [
                 BoxShadow(
-                  color: Colors.black26,
-                  blurRadius: 10.0,
-                  offset: const Offset(0.0, 10.0),
+                  color: Colors.black.withOpacity(0.1),
+                  blurRadius: 10,
+                  offset: const Offset(0, 5),
                 ),
               ],
             ),
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
-                // Icon và Title
                 Container(
-                  padding: const EdgeInsets.all(15),
+                  padding: const EdgeInsets.all(16),
                   decoration: BoxDecoration(
-                    color: Colors.red.shade50,
+                    color: const Color(0xFFF3F1FE),
                     shape: BoxShape.circle,
                   ),
-                  child: Icon(
+                  child: const Icon(
                     Icons.logout_rounded,
-                    color: Colors.red.shade400,
-                    size: 40,
+                    color: Color(0xFF7B6EF6),
+                    size: 32,
                   ),
                 ),
-                const SizedBox(height: 20),
+                const SizedBox(height: 24),
                 const Text(
                   'Đăng xuất',
                   style: TextStyle(
-                    fontSize: 22,
-                    fontWeight: FontWeight.w600,
+                    fontSize: 20,
+                    fontWeight: FontWeight.bold,
+                    color: Color(0xFF2D3142),
                   ),
                 ),
-                const SizedBox(height: 12),
+                const SizedBox(height: 16),
                 Text(
                   'Bạn có chắc chắn muốn đăng xuất?',
                   style: TextStyle(
@@ -207,7 +391,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   textAlign: TextAlign.center,
                 ),
                 const SizedBox(height: 24),
-                // Buttons
                 Row(
                   children: [
                     Expanded(
@@ -233,7 +416,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                     Expanded(
                       child: ElevatedButton(
                         style: ElevatedButton.styleFrom(
-                          backgroundColor: Colors.red.shade400,
+                          backgroundColor: const Color(0xFF7B6EF6),
                           padding: const EdgeInsets.symmetric(vertical: 12),
                           shape: RoundedRectangleBorder(
                             borderRadius: BorderRadius.circular(10),
@@ -241,7 +424,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
                           elevation: 0,
                         ),
                         onPressed: () async {
-                          // Show loading
                           showDialog(
                             context: context,
                             barrierDismissible: false,
@@ -252,15 +434,12 @@ class _ProfileScreenState extends State<ProfileScreen> {
                             },
                           );
 
-                          // Perform logout
                           try {
                             await Provider.of<AuthProvider>(context,
                                     listen: false)
                                 .logout();
-                            // Pop loading dialog and logout dialog
                             Navigator.pop(context);
                             Navigator.pop(context);
-                            // Navigate to login screen
                             Navigator.pushReplacement(
                               context,
                               MaterialPageRoute(
@@ -268,9 +447,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                               ),
                             );
                           } catch (e) {
-                            // Pop loading dialog
                             Navigator.pop(context);
-                            // Show error
                             ScaffoldMessenger.of(context).showSnackBar(
                               SnackBar(
                                 content:
