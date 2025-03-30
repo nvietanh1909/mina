@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:mina/theme/color.dart';
 import 'package:mina/services/category_service.dart';
+import 'package:mina/model/category_model.dart';
 
 class AddCategoryScreen extends StatefulWidget {
   const AddCategoryScreen({super.key});
@@ -17,6 +18,7 @@ class _AddCategoryScreenState extends State<AddCategoryScreen> {
   bool _isLoading = false;
   String? _selectedIcon;
   Color _selectedColor = Colors.blue;
+  List<CategoryIcon> _selectedIcons = [];
 
   final List<Color> _predefinedColors = [
     Colors.blue,
@@ -34,62 +36,65 @@ class _AddCategoryScreenState extends State<AddCategoryScreen> {
   ];
 
   final List<String> _predefinedIcons = [
-    '🍔',
-    '🍕',
-    '🍜',
-    '🍱',
-    '🍣',
-    '🍰',
-    '☕',
-    '🍺',
-    '🚗',
-    '🚌',
-    '🚲',
-    '✈️',
-    '🚇',
-    '🚕',
-    '🚶',
-    '🛍️',
-    '👕',
-    '👖',
-    '👟',
-    '👜',
-    '💼',
-    '🛒',
-    '🎁',
-    '🏠',
-    '🏢',
-    '🏥',
-    '🏫',
-    '🏪',
-    '🏨',
-    '🏦',
-    '💊',
-    '📚',
-    '✏️',
-    '📝',
-    '🎓',
-    '💸',
-    '💰',
-    '💵',
-    '💳',
-    '💻',
-    '📱',
-    '⌚',
-    '📷',
-    '🎮',
-    '🎨',
-    '🎵',
-    '🏃',
-    '⚽',
-    '🌳',
-    '🌺',
-    '🐶',
-    '🐱',
-    '💡',
-    '🔦',
-    '💪',
-    '❤️'
+    // Food & Drinks
+    '🍔', '🍕', '🍜', '🍱', '🍣', '🍰', '☕', '🍺', '🍷', '🍸', '🍹', '🍪', '🍫',
+    '🍬', '🍭', '🍮', '🍯', '🍼', '🥛', '🥤',
+    '🥣', '🥗', '🥘', '🥫', '🍝', '🍞', '🥐', '🥖', '🥨', '🧀', '🥚', '🥩',
+    '🥓', '🥪', '🌮', '🌯', '🥙', '🥟', '🥠', '🥡',
+
+    // Transportation
+    '🚗', '🚌', '🚲', '✈️', '🚇', '🚕', '🚛', '🚚', '🚜', '🚎', '🚐', '🚑',
+    '🚒', '🚓', '🚔', '🚖', '🚘', '🚍', '🚋', '🚊',
+    '🚉', '🚞', '🚝', '🚄', '🚅', '🚈', '🚂', '🚃', '🚋', '🚌', '🚎', '🚐',
+    '🚑', '🚒', '🚓', '🚔', '🚕', '🚖', '🚗', '🚘',
+
+    // Shopping & Fashion
+    '🛍️', '👕', '👖', '👟', '👜', '💼', '🛒', '🎁', '👗', '👠', '👡', '👢',
+    '👞', '👟', '🧢', '🧣', '🧤', '🧥', '🧦', '👙',
+    '👚', '👛', '👜', '👝', '🎒', '💼', '🕶️', '👓', '💍', '💎', '💄', '💅',
+    '💇', '💆', '💃', '🕺', '👯', '👯‍♂️', '👯‍♀️', '👨‍🦯',
+
+    // Buildings & Places
+    '🏠', '🏢', '🏥', '🏫', '🏪', '🏨', '🏦', '🏭', '🏰', '🏯', '🏛️', '🏗️',
+    '🏘️', '🏙️', '🏚️', '🏛️', '🏜️', '🏝️', '🏞️', '🏟️',
+    '🏠', '🏡', '🏢', '🏣', '🏤', '🏥', '🏦', '🏨', '🏩', '🏪', '🏫', '🏬',
+    '🏭', '🏯', '🏰', '💒', '🏛️', '⛪', '🕌', '🕍',
+
+    // Education & Work
+    '💊', '📚', '✏️', '📝', '🎓', '💸', '💰', '💵', '💳', '💻', '📱', '⌚', '📷',
+    '🎮', '🎨', '🎵', '🏃', '⚽', '🌳', '🌺',
+    '📖', '📗', '📘', '📙', '📚', '📓', '📒', '📑', '📋', '📎', '✂️', '📏',
+    '📌', '📍', '✒️', '✏️', '🖊️', '🖋️', '🖌️', '🖍️',
+
+    // Sports & Activities
+    '🏃', '⚽', '🏀', '🏈', '⚾', '🏉', '🎾', '🏐', '🏓', '🏸', '🏒', '🏑', '🏏',
+    '🥅', '⛳', '🏹', '🎣', '🥊', '🥋', '🎽',
+    '🏅', '🎖️', '🏆', '🏋️', '🤸', '⛹️', '🤾', '🏊', '🏄', '🚣', '🏇', '🚴',
+    '🚵', '🎯', '🎲', '🎰', '🎳', '🎪', '🎭', '🎨',
+
+    // Nature & Animals
+    '🌳', '🌺', '🐶', '🐱', '💡', '🔦', '💪', '❤️', '🌲', '🌴', '🌵', '🌷',
+    '🌸', '🌹', '🌻', '🌼', '🌽', '🌾', '🌿', '🍀',
+    '🍁', '🍂', '🍃', '🌍', '🌎', '🌏', '🌕', '🌖', '🌗', '🌘', '🌑', '🌒',
+    '🌓', '🌔', '🌙', '⭐', '🌟', '💫', '✨', '☄️',
+
+    // Emojis & Symbols
+    '❤️', '🧡', '💛', '💚', '💙', '💜', '🖤', '🤍', '🤎', '💔', '❣️', '💕',
+    '💞', '💓', '💗', '💖', '💘', '💝', '💟', '☮️',
+    '✝️', '☪️', '🕉️', '☸️', '✡️', '🔯', '🕎', '☯️', '☦️', '🛐', '⛎', '♈', '♉',
+    '♊', '♋', '♌', '♍', '♎', '♏', '♐', '♑',
+
+    // Objects & Tools
+    '💡', '🔦', '💪', '❤️', '🔨', '🪛', '🔧', '🪜', '🧰', '🧲', '⚖️', '🔗',
+    '⛓️', '🧪', '🧫', '🧬', '🔬', '🔭', '📡', '💉',
+    '🩸', '💊', '🩹', '🩺', '🧴', '🧷', '🧹', '🧺', '🧻', '🚽', '🚰', '🚿',
+    '🛁', '🧼', '🧽', '🧯', '🛒', '🚬', '⚰️', '⚱️',
+
+    // Time & Weather
+    '⌚', '📱', '📲', '💻', '⌨️', '🖥️', '🖨', '🖱️', '🖲️', '🕹️', '🗜️', '💽',
+    '💾', '💿', '📀', '📼', '📷', '📸', '📹', '🎥',
+    '📽️', '🎞️', '📞', '☎️', '📟', '📠', '📺', '📻', '🎙️', '🎚️', '🎛️', '🧭',
+    '⏱️', '⏲️', '⏰', '🕰️', '⌛', '⏳', '📡', '🔋',
   ];
 
   @override
@@ -101,9 +106,9 @@ class _AddCategoryScreenState extends State<AddCategoryScreen> {
 
   Future<void> _handleSubmit() async {
     if (!_formKey.currentState!.validate()) return;
-    if (_selectedIcon == null) {
+    if (_selectedIcons.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Please select an icon')),
+        const SnackBar(content: Text('Please select at least one icon')),
       );
       return;
     }
@@ -114,31 +119,42 @@ class _AddCategoryScreenState extends State<AddCategoryScreen> {
       final Map<String, dynamic> categoryData = {
         'name': _nameController.text,
         'description': _descriptionController.text,
-        'icon': _selectedIcon,
+        'icon': _selectedIcons.first.iconPath,
         'color': '#${_selectedColor.value.toRadixString(16).substring(2)}',
+        'icons': _selectedIcons
+            .map((icon) => {
+                  'iconPath': icon.iconPath,
+                  'color':
+                      '#${_selectedColor.value.toRadixString(16).substring(2)}'
+                })
+            .toList(),
       };
+
+      print('Sending category data: $categoryData'); // Debug log
 
       final result = await _categoryService.createCategory(categoryData);
 
       if (!mounted) return;
 
       if (result['success']) {
-        Navigator.pop(context, {
-          'id': result['id'],
-          'name': _nameController.text,
-          'description': _descriptionController.text,
-          'icon': _selectedIcon,
-          'color': categoryData['color'],
-        });
+        // Return true to indicate successful creation
+        Navigator.pop(context, true);
       } else {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(result['message'])),
+          SnackBar(
+            content: Text(result['message'] ?? 'Failed to create category'),
+            backgroundColor: Colors.red,
+          ),
         );
       }
     } catch (e) {
+      print('Error in _handleSubmit: $e'); // Debug log
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Error: $e')),
+        SnackBar(
+          content: Text('Error: ${e.toString()}'),
+          backgroundColor: Colors.red,
+        ),
       );
     } finally {
       if (mounted) {
@@ -147,11 +163,28 @@ class _AddCategoryScreenState extends State<AddCategoryScreen> {
     }
   }
 
+  void _toggleIcon(String icon) {
+    setState(() {
+      if (_selectedIcons.any((i) => i.iconPath == icon)) {
+        _selectedIcons.removeWhere((i) => i.iconPath == icon);
+      } else {
+        _selectedIcons.add(CategoryIcon(
+          id: DateTime.now().millisecondsSinceEpoch.toString(),
+          iconPath: icon,
+          color: '#${_selectedColor.value.toRadixString(16).substring(2)}',
+        ));
+      }
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Add Category'),
+        title: const Text(
+          'ADD CATEGORY',
+          style: TextStyle(fontWeight: FontWeight.bold),
+        ),
         centerTitle: true,
         actions: [
           if (_isLoading)
@@ -244,6 +277,15 @@ class _AddCategoryScreenState extends State<AddCategoryScreen> {
                         onTap: () {
                           setState(() {
                             _selectedColor = color;
+                            // Update color for all selected icons
+                            _selectedIcons = _selectedIcons.map((icon) {
+                              return CategoryIcon(
+                                id: icon.id,
+                                iconPath: icon.iconPath,
+                                color:
+                                    '#${color.value.toRadixString(16).substring(2)}',
+                              );
+                            }).toList();
                           });
                         },
                         borderRadius: BorderRadius.circular(8),
@@ -273,7 +315,7 @@ class _AddCategoryScreenState extends State<AddCategoryScreen> {
                 ),
                 const SizedBox(height: 24),
                 const Text(
-                  'Select Icon',
+                  'Select Icons',
                   style: TextStyle(
                     fontSize: 16,
                     fontWeight: FontWeight.bold,
@@ -299,13 +341,10 @@ class _AddCategoryScreenState extends State<AddCategoryScreen> {
                     itemCount: _predefinedIcons.length,
                     itemBuilder: (context, index) {
                       final icon = _predefinedIcons[index];
-                      final isSelected = _selectedIcon == icon;
+                      final isSelected =
+                          _selectedIcons.any((i) => i.iconPath == icon);
                       return InkWell(
-                        onTap: () {
-                          setState(() {
-                            _selectedIcon = icon;
-                          });
-                        },
+                        onTap: () => _toggleIcon(icon),
                         borderRadius: BorderRadius.circular(8),
                         child: Container(
                           decoration: BoxDecoration(
@@ -331,6 +370,63 @@ class _AddCategoryScreenState extends State<AddCategoryScreen> {
                     },
                   ),
                 ),
+                if (_selectedIcons.isNotEmpty) ...[
+                  const SizedBox(height: 24),
+                  const Text(
+                    'Selected Icons',
+                    style: TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                  const SizedBox(height: 16),
+                  Container(
+                    height: 60,
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      borderRadius: BorderRadius.circular(12),
+                      border: Border.all(color: Colors.grey.shade200),
+                    ),
+                    child: ListView.builder(
+                      scrollDirection: Axis.horizontal,
+                      padding: const EdgeInsets.symmetric(horizontal: 12),
+                      itemCount: _selectedIcons.length,
+                      itemBuilder: (context, index) {
+                        final icon = _selectedIcons[index];
+                        return Padding(
+                          padding: const EdgeInsets.symmetric(vertical: 8),
+                          child: Container(
+                            margin: const EdgeInsets.only(right: 8),
+                            decoration: BoxDecoration(
+                              color: _selectedColor.withOpacity(0.1),
+                              borderRadius: BorderRadius.circular(8),
+                              border: Border.all(
+                                color: _selectedColor,
+                                width: 1,
+                              ),
+                            ),
+                            child: Row(
+                              children: [
+                                Padding(
+                                  padding:
+                                      const EdgeInsets.symmetric(horizontal: 8),
+                                  child: Text(
+                                    icon.iconPath,
+                                    style: const TextStyle(fontSize: 24),
+                                  ),
+                                ),
+                                IconButton(
+                                  icon: const Icon(Icons.close, size: 16),
+                                  onPressed: () => _toggleIcon(icon.iconPath),
+                                ),
+                              ],
+                            ),
+                          ),
+                        );
+                      },
+                    ),
+                  ),
+                ],
               ],
             ),
           ),

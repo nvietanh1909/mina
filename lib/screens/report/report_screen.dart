@@ -11,7 +11,8 @@ class ReportScreen extends StatefulWidget {
   State<ReportScreen> createState() => _ReportScreenState();
 }
 
-class _ReportScreenState extends State<ReportScreen> {
+class _ReportScreenState extends State<ReportScreen>
+    with WidgetsBindingObserver {
   String selectedYear = DateTime.now().year.toString();
   bool _isLoading = false;
   Map<String, dynamic>? _stats;
@@ -24,10 +25,40 @@ class _ReportScreenState extends State<ReportScreen> {
     'income': {},
     'expense': {},
   };
+  final FocusNode _focusNode = FocusNode();
 
   @override
   void initState() {
     super.initState();
+    WidgetsBinding.instance.addObserver(this);
+    _focusNode.addListener(_onFocusChange);
+    _loadStats();
+  }
+
+  @override
+  void dispose() {
+    _focusNode.removeListener(_onFocusChange);
+    _focusNode.dispose();
+    WidgetsBinding.instance.removeObserver(this);
+    super.dispose();
+  }
+
+  void _onFocusChange() {
+    if (_focusNode.hasFocus) {
+      _loadStats();
+    }
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state == AppLifecycleState.resumed) {
+      _loadStats();
+    }
+  }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
     _loadStats();
   }
 
@@ -249,69 +280,72 @@ class _ReportScreenState extends State<ReportScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: Colors.white,
-      appBar: AppBar(
+    return Focus(
+      focusNode: _focusNode,
+      child: Scaffold(
         backgroundColor: Colors.white,
-        elevation: 0,
-        title: const Text(
-          'Report',
-          style: TextStyle(
-            fontSize: 20,
-            fontWeight: FontWeight.w700,
-            color: Colors.black87,
+        appBar: AppBar(
+          backgroundColor: Colors.white,
+          elevation: 0,
+          title: const Text(
+            'Report',
+            style: TextStyle(
+              fontSize: 20,
+              fontWeight: FontWeight.w700,
+              color: Colors.black87,
+            ),
           ),
+          /** actions: [
+            Stack(
+              children: [
+                IconButton(
+                  icon: const Icon(Icons.notifications_none, color: Colors.black),
+                  onPressed: () {},
+                ),
+                Positioned(
+                  right: 0,
+                  top: 0,
+                  child: Transform.rotate(
+                    angle: 0.785398,
+                    child: Container(
+                      padding:
+                          const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                      color: Colors.red,
+                      child: const Text('Active',
+                          style: TextStyle(color: Colors.white, fontSize: 10)),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ], */
+          centerTitle: true,
         ),
-        /** actions: [
-          Stack(
-            children: [
-              IconButton(
-                icon: const Icon(Icons.notifications_none, color: Colors.black),
-                onPressed: () {},
-              ),
-              Positioned(
-                right: 0,
-                top: 0,
-                child: Transform.rotate(
-                  angle: 0.785398,
-                  child: Container(
-                    padding:
-                        const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-                    color: Colors.red,
-                    child: const Text('Active',
-                        style: TextStyle(color: Colors.white, fontSize: 10)),
+        body: _isLoading
+            ? const Center(child: CircularProgressIndicator())
+            : SingleChildScrollView(
+                child: Padding(
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 12, vertical: 16),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      // Year selector
+                      SingleChildScrollView(
+                        scrollDirection: Axis.horizontal,
+                        child: Row(
+                          children: _generateYearButtons(),
+                        ),
+                      ),
+                      const SizedBox(height: 24),
+                      _stats != null
+                          ? _buildDataContent()
+                          : _buildNoDataMessage(),
+                    ],
                   ),
                 ),
               ),
-            ],
-          ),
-        ], */
-        centerTitle: true,
       ),
-      body: _isLoading
-          ? const Center(child: CircularProgressIndicator())
-          : SingleChildScrollView(
-              child: Padding(
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 12, vertical: 16),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    // Year selector
-                    SingleChildScrollView(
-                      scrollDirection: Axis.horizontal,
-                      child: Row(
-                        children: _generateYearButtons(),
-                      ),
-                    ),
-                    const SizedBox(height: 24),
-                    _stats != null
-                        ? _buildDataContent()
-                        : _buildNoDataMessage(),
-                  ],
-                ),
-              ),
-            ),
     );
   }
 

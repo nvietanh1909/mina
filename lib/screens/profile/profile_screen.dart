@@ -8,6 +8,7 @@ import 'package:cached_network_image/cached_network_image.dart';
 import 'package:image_picker/image_picker.dart';
 import 'dart:io';
 import 'package:mime/mime.dart';
+import 'package:mina/screens/profile/change_password_screen.dart';
 
 class ProfileScreen extends StatefulWidget {
   const ProfileScreen({super.key});
@@ -23,18 +24,28 @@ class _ProfileScreenState extends State<ProfileScreen>
   bool _isLoading = true;
   String? _error;
   bool _isInitialized = false;
+  final FocusNode _focusNode = FocusNode();
 
   @override
   void initState() {
     super.initState();
     WidgetsBinding.instance.addObserver(this);
+    _focusNode.addListener(_onFocusChange);
     _fetchProfile();
   }
 
   @override
   void dispose() {
+    _focusNode.removeListener(_onFocusChange);
+    _focusNode.dispose();
     WidgetsBinding.instance.removeObserver(this);
     super.dispose();
+  }
+
+  void _onFocusChange() {
+    if (_focusNode.hasFocus) {
+      _fetchProfile();
+    }
   }
 
   @override
@@ -42,6 +53,12 @@ class _ProfileScreenState extends State<ProfileScreen>
     if (state == AppLifecycleState.resumed) {
       _fetchProfile();
     }
+  }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    _fetchProfile();
   }
 
   Future<void> _fetchProfile() async {
@@ -141,204 +158,218 @@ class _ProfileScreenState extends State<ProfileScreen>
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: Colors.white,
-      body: RefreshIndicator(
-        onRefresh: _fetchProfile,
-        child: _isLoading
-            ? const Center(child: CircularProgressIndicator())
-            : Stack(
-                children: [
-                  // Background gradient
-                  Container(
-                    height: 300,
-                    decoration: const BoxDecoration(
-                      gradient: LinearGradient(
-                        begin: Alignment.topLeft,
-                        end: Alignment.bottomRight,
-                        colors: [
-                          Color.fromARGB(255, 53, 39, 174),
-                          Color.fromARGB(255, 182, 78, 128),
-                        ],
+    return Focus(
+      focusNode: _focusNode,
+      child: Scaffold(
+        backgroundColor: Colors.white,
+        body: RefreshIndicator(
+          onRefresh: _fetchProfile,
+          child: _isLoading
+              ? const Center(child: CircularProgressIndicator())
+              : Stack(
+                  children: [
+                    // Background gradient
+                    Container(
+                      height: 300,
+                      decoration: const BoxDecoration(
+                        gradient: LinearGradient(
+                          begin: Alignment.topLeft,
+                          end: Alignment.bottomRight,
+                          colors: [
+                            Color.fromARGB(255, 53, 39, 174),
+                            Color.fromARGB(255, 182, 78, 128),
+                          ],
+                        ),
                       ),
                     ),
-                  ),
-                  SafeArea(
-                    child: SingleChildScrollView(
-                      physics: const AlwaysScrollableScrollPhysics(),
-                      child: Column(
-                        children: [
-                          const SizedBox(height: 30),
-                          // Profile Section
-                          Center(
-                            child: Column(
-                              children: [
-                                Stack(
-                                  children: [
-                                    GestureDetector(
-                                      onTap: _pickAndUploadImage,
-                                      child: Container(
-                                        width: 80,
-                                        height: 80,
-                                        decoration: BoxDecoration(
-                                          shape: BoxShape.circle,
-                                          color: Colors.white,
-                                          boxShadow: [
-                                            BoxShadow(
-                                              color:
-                                                  Colors.black.withOpacity(0.1),
-                                              blurRadius: 10,
-                                              offset: const Offset(0, 5),
-                                            ),
-                                          ],
-                                        ),
-                                        child: ClipOval(
-                                          child: _user?.avatar != null
-                                              ? CachedNetworkImage(
-                                                  imageUrl: _user!.avatar!,
-                                                  fit: BoxFit.cover,
-                                                  placeholder: (context, url) =>
-                                                      const Center(
-                                                    child:
-                                                        CircularProgressIndicator(),
+                    SafeArea(
+                      child: SingleChildScrollView(
+                        physics: const AlwaysScrollableScrollPhysics(),
+                        child: Column(
+                          children: [
+                            const SizedBox(height: 30),
+                            // Profile Section
+                            Center(
+                              child: Column(
+                                children: [
+                                  Stack(
+                                    children: [
+                                      GestureDetector(
+                                        onTap: _pickAndUploadImage,
+                                        child: Container(
+                                          width: 80,
+                                          height: 80,
+                                          decoration: BoxDecoration(
+                                            shape: BoxShape.circle,
+                                            color: Colors.white,
+                                            boxShadow: [
+                                              BoxShadow(
+                                                color: Colors.black
+                                                    .withOpacity(0.1),
+                                                blurRadius: 10,
+                                                offset: const Offset(0, 5),
+                                              ),
+                                            ],
+                                          ),
+                                          child: ClipOval(
+                                            child: _user?.avatar != null
+                                                ? CachedNetworkImage(
+                                                    imageUrl: _user!.avatar!,
+                                                    fit: BoxFit.cover,
+                                                    placeholder:
+                                                        (context, url) =>
+                                                            const Center(
+                                                      child:
+                                                          CircularProgressIndicator(),
+                                                    ),
+                                                    errorWidget:
+                                                        (context, url, error) {
+                                                      return const Icon(
+                                                        Icons.person,
+                                                        size: 40,
+                                                        color: Colors.grey,
+                                                      );
+                                                    },
+                                                  )
+                                                : const Icon(
+                                                    Icons.person,
+                                                    size: 40,
+                                                    color: Colors.grey,
                                                   ),
-                                                  errorWidget:
-                                                      (context, url, error) {
-                                                    return const Icon(
-                                                      Icons.person,
-                                                      size: 40,
-                                                      color: Colors.grey,
-                                                    );
-                                                  },
-                                                )
-                                              : const Icon(
-                                                  Icons.person,
-                                                  size: 40,
-                                                  color: Colors.grey,
-                                                ),
+                                          ),
                                         ),
                                       ),
-                                    ),
-                                    Positioned(
-                                      right: 0,
-                                      bottom: 0,
-                                      child: Container(
-                                        width: 32,
-                                        height: 32,
-                                        decoration: BoxDecoration(
-                                          color: Colors.white,
-                                          shape: BoxShape.circle,
-                                          boxShadow: [
-                                            BoxShadow(
-                                              color:
-                                                  Colors.black.withOpacity(0.1),
-                                              blurRadius: 4,
-                                              spreadRadius: 1,
-                                            ),
-                                          ],
-                                        ),
-                                        child: IconButton(
-                                          padding: EdgeInsets.zero,
-                                          icon: const Icon(Icons.camera_alt,
-                                              size: 20),
-                                          color: const Color(0xFF7B6EF6),
-                                          onPressed: _pickAndUploadImage,
+                                      Positioned(
+                                        right: 0,
+                                        bottom: 0,
+                                        child: Container(
+                                          width: 32,
+                                          height: 32,
+                                          decoration: BoxDecoration(
+                                            color: Colors.white,
+                                            shape: BoxShape.circle,
+                                            boxShadow: [
+                                              BoxShadow(
+                                                color: Colors.black
+                                                    .withOpacity(0.1),
+                                                blurRadius: 4,
+                                                spreadRadius: 1,
+                                              ),
+                                            ],
+                                          ),
+                                          child: IconButton(
+                                            padding: EdgeInsets.zero,
+                                            icon: const Icon(Icons.camera_alt,
+                                                size: 20),
+                                            color: const Color(0xFF7B6EF6),
+                                            onPressed: _pickAndUploadImage,
+                                          ),
                                         ),
                                       ),
+                                    ],
+                                  ),
+                                  const SizedBox(height: 16),
+                                  Text(
+                                    _user?.name ?? 'Loading...',
+                                    style: const TextStyle(
+                                      fontSize: 24,
+                                      fontWeight: FontWeight.bold,
+                                      color: Colors.white,
                                     ),
-                                  ],
-                                ),
-                                const SizedBox(height: 16),
-                                Text(
-                                  _user?.name ?? 'Loading...',
-                                  style: const TextStyle(
-                                    fontSize: 24,
-                                    fontWeight: FontWeight.bold,
-                                    color: Colors.white,
                                   ),
-                                ),
-                                const SizedBox(height: 8),
-                                Text(
-                                  _user?.email ?? 'Loading...',
-                                  style: const TextStyle(
-                                    fontSize: 16,
-                                    color: Colors.white,
-                                    fontWeight: FontWeight.w500,
+                                  const SizedBox(height: 8),
+                                  Text(
+                                    _user?.email ?? 'Loading...',
+                                    style: const TextStyle(
+                                      fontSize: 16,
+                                      color: Colors.white,
+                                      fontWeight: FontWeight.w500,
+                                    ),
                                   ),
-                                ),
-                              ],
+                                ],
+                              ),
                             ),
-                          ),
-                          const SizedBox(height: 30),
-                          // Settings Card
-                          Container(
-                            margin: const EdgeInsets.symmetric(horizontal: 20),
-                            decoration: BoxDecoration(
-                              color: Colors.white,
-                              borderRadius: BorderRadius.circular(20),
-                              boxShadow: [
-                                BoxShadow(
-                                  color: Colors.black.withOpacity(0.05),
-                                  blurRadius: 10,
-                                  spreadRadius: 0,
-                                  offset: const Offset(0, 2),
-                                ),
-                              ],
-                            ),
-                            child: Column(
-                              children: [
-                                _buildSettingRow(
-                                  icon: Icons.notifications_outlined,
-                                  iconBackground: const Color(0xFFF3F1FE),
-                                  iconColor: const Color(0xFF7B6EF6),
-                                  title: 'Notifications',
-                                  subtitle: 'Manage your notifications',
-                                  trailing: Switch(
-                                    value: _notificationsEnabled,
-                                    onChanged: (value) {
-                                      setState(() {
-                                        _notificationsEnabled = value;
-                                      });
+                            const SizedBox(height: 30),
+                            // Settings Card
+                            Container(
+                              margin:
+                                  const EdgeInsets.symmetric(horizontal: 20),
+                              decoration: BoxDecoration(
+                                color: Colors.white,
+                                borderRadius: BorderRadius.circular(20),
+                                boxShadow: [
+                                  BoxShadow(
+                                    color: Colors.black.withOpacity(0.05),
+                                    blurRadius: 10,
+                                    spreadRadius: 0,
+                                    offset: const Offset(0, 2),
+                                  ),
+                                ],
+                              ),
+                              child: Column(
+                                children: [
+                                  _buildSettingRow(
+                                    icon: Icons.notifications_outlined,
+                                    iconBackground: const Color(0xFFF3F1FE),
+                                    iconColor: const Color(0xFF7B6EF6),
+                                    title: 'Notifications',
+                                    subtitle: 'Manage your notifications',
+                                    trailing: Switch(
+                                      value: _notificationsEnabled,
+                                      onChanged: (value) {
+                                        setState(() {
+                                          _notificationsEnabled = value;
+                                        });
+                                      },
+                                      activeColor: const Color(0xFF7B6EF6),
+                                    ),
+                                  ),
+                                  _buildDivider(),
+                                  _buildSettingRow(
+                                    icon: Icons.lock_outline,
+                                    iconBackground: const Color(0xFFF3F1FE),
+                                    iconColor: const Color(0xFF7B6EF6),
+                                    title: 'Change Password',
+                                    subtitle: 'Update your password',
+                                    trailing: const Icon(
+                                      Icons.arrow_forward_ios,
+                                      size: 16,
+                                      color: Colors.grey,
+                                    ),
+                                    onTap: () {
+                                      Navigator.push(
+                                        context,
+                                        MaterialPageRoute(
+                                          builder: (context) =>
+                                              const ChangePasswordScreen(),
+                                        ),
+                                      );
                                     },
-                                    activeColor: const Color(0xFF7B6EF6),
                                   ),
-                                ),
-                                _buildDivider(),
-                                _buildSettingRow(
-                                  icon: Icons.lock_outline,
-                                  iconBackground: const Color(0xFFF3F1FE),
-                                  iconColor: const Color(0xFF7B6EF6),
-                                  title: 'Change Password',
-                                  subtitle: 'Update your password',
-                                  trailing: const Icon(
-                                    Icons.arrow_forward_ios,
-                                    size: 16,
-                                    color: Colors.grey,
+                                  _buildDivider(),
+                                  _buildSettingRow(
+                                    icon: Icons.logout,
+                                    iconBackground: const Color(0xFFF3F1FE),
+                                    iconColor: const Color(0xFF7B6EF6),
+                                    title: 'Log out',
+                                    subtitle: 'Sign out of your account',
+                                    trailing: const Icon(
+                                      Icons.arrow_forward_ios,
+                                      size: 16,
+                                      color: Colors.grey,
+                                    ),
+                                    onTap: () => _showLogoutDialog(context),
                                   ),
-                                ),
-                                _buildDivider(),
-                                _buildSettingRow(
-                                  icon: Icons.logout,
-                                  iconBackground: const Color(0xFFF3F1FE),
-                                  iconColor: const Color(0xFF7B6EF6),
-                                  title: 'Log out',
-                                  subtitle: 'Sign out of your account',
-                                  trailing: const Icon(
-                                    Icons.arrow_forward_ios,
-                                    size: 16,
-                                    color: Colors.grey,
-                                  ),
-                                  onTap: () => _showLogoutDialog(context),
-                                ),
-                              ],
+                                ],
+                              ),
                             ),
-                          ),
-                        ],
+                          ],
+                        ),
                       ),
                     ),
-                  ),
-                ],
-              ),
+                  ],
+                ),
+        ),
       ),
     );
   }

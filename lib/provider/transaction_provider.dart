@@ -285,6 +285,43 @@ class TransactionProvider with ChangeNotifier {
     }
   }
 
+  // Lấy thông tin chi tiết của một giao dịch
+  Future<Transaction?> getTransaction(String transactionId) async {
+    try {
+      _isLoading = true;
+      _error = null;
+      notifyListeners();
+
+      final token = await AuthService().getToken();
+      if (token == null) {
+        throw Exception('Không có token xác thực');
+      }
+
+      final response = await http.get(
+        Uri.parse('${AuthService.baseUrl}/api/transactions/$transactionId'),
+        headers: {
+          'Authorization': 'Bearer $token',
+          'Content-Type': 'application/json',
+        },
+      );
+
+      final responseData = json.decode(response.body);
+
+      if (response.statusCode == 200) {
+        return Transaction.fromJson(responseData['data']['transaction']);
+      } else {
+        _error = responseData['message'] ?? 'Lỗi không xác định';
+        throw Exception(_error);
+      }
+    } catch (error) {
+      _error = error.toString();
+      throw error;
+    } finally {
+      _isLoading = false;
+      notifyListeners();
+    }
+  }
+
   void clearTransactions() {
     _resetState();
   }

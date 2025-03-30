@@ -26,26 +26,35 @@ class HomeScreen extends StatefulWidget {
 
 class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
   bool _isLoading = true;
+  String? _error;
+  DateTime? _lastRefreshTime;
+  static const _refreshInterval = Duration(minutes: 5);
 
   @override
   void initState() {
     super.initState();
     WidgetsBinding.instance.addObserver(this);
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      _loadInitialData();
-    });
+    _loadInitialData();
   }
 
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
-    _loadInitialData();
+    // Only reload if the last refresh was more than 5 minutes ago
+    if (_lastRefreshTime == null ||
+        DateTime.now().difference(_lastRefreshTime!) > _refreshInterval) {
+      _loadInitialData();
+    }
   }
 
   @override
   void didChangeAppLifecycleState(AppLifecycleState state) {
     if (state == AppLifecycleState.resumed) {
-      _loadInitialData();
+      // Only reload if the last refresh was more than 5 minutes ago
+      if (_lastRefreshTime == null ||
+          DateTime.now().difference(_lastRefreshTime!) > _refreshInterval) {
+        _loadInitialData();
+      }
     }
   }
 
@@ -56,41 +65,72 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
   }
 
   Future<void> _loadInitialData() async {
-    try {
-      setState(() => _isLoading = true);
+    if (!mounted) return;
 
-      // Load both wallets and transactions
+    setState(() {
+      _isLoading = true;
+      _error = null;
+    });
+
+    try {
       final transactionProvider =
           Provider.of<TransactionProvider>(context, listen: false);
       final walletProvider =
           Provider.of<WalletProvider>(context, listen: false);
 
+      // Load data in parallel
       await Future.wait([
         walletProvider.loadWallets(),
-        transactionProvider.fetchTransactions(),
+        transactionProvider.fetchTransactions(
+          refresh: true,
+          limit: 50, // Load more transactions initially
+        ),
       ]);
-    } catch (e) {
-      print('Error loading initial data: $e');
-    } finally {
+
       if (mounted) {
-        setState(() => _isLoading = false);
+        setState(() {
+          _isLoading = false;
+          _lastRefreshTime = DateTime.now();
+        });
       }
+    } catch (e) {
+      if (mounted) {
+        setState(() {
+          _isLoading = false;
+          _error = 'Failed to load data. Please try again.';
+        });
+      }
+      print('Error loading initial data: $e');
     }
   }
 
-  Future<void> _navigateToTransaction() async {
-    final result = await Navigator.push(
-      context,
-      MaterialPageRoute(builder: (context) => const TransactionScreen()),
+  Widget _buildErrorWidget() {
+    return Center(
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          const Icon(
+            Icons.error_outline,
+            color: Colors.red,
+            size: 60,
+          ),
+          const SizedBox(height: 16),
+          Text(
+            _error ?? 'An error occurred',
+            style: const TextStyle(
+              color: Colors.red,
+              fontSize: 16,
+            ),
+            textAlign: TextAlign.center,
+          ),
+          const SizedBox(height: 16),
+          ElevatedButton(
+            onPressed: _loadInitialData,
+            child: const Text('Retry'),
+          ),
+        ],
+      ),
     );
-
-    // Kiểm tra kết quả trả về từ màn hình transaction
-    if (result != null && result is Map<String, dynamic>) {
-      if (result['needRefresh'] == true) {
-        // Cập nhật lại dữ liệu
-        await _loadInitialData();
-      }
-    }
   }
 
   @override
@@ -104,70 +144,64 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
           elevation: 0,
         ),
       ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: _navigateToTransaction,
-        backgroundColor: const Color(0xFF1D61E7),
-        child: const Icon(Icons.add),
-      ),
-      floatingActionButtonLocation: FloatingActionButtonLocation.centerDocked,
-      bottomNavigationBar: BottomAppBar(
-          // ... existing bottom navigation bar code ...
-          ),
       body: RefreshIndicator(
         onRefresh: _loadInitialData,
         child: _isLoading
-            ? const Center(child: CircularProgressIndicator())
-            : Consumer2<WalletProvider, TransactionProvider>(
-                builder: (context, walletProvider, transactionProvider, child) {
-                  // Tính toán các số liệu thống kê
-                  final totalBalance = walletProvider.wallets.fold<double>(
-                    0,
-                    (sum, wallet) => sum + wallet.balance,
-                  );
+            ? const Center(
+                child: CircularProgressIndicator(),
+              )
+            : _error != null
+                ? _buildErrorWidget()
+                : Consumer2<WalletProvider, TransactionProvider>(
+                    builder:
+                        (context, walletProvider, transactionProvider, child) {
+                      // Calculate statistics
+                      final totalBalance = walletProvider.wallets.fold<double>(
+                        0,
+                        (sum, wallet) => sum + wallet.balance,
+                      );
 
-                  final incomeTransactions = transactionProvider.transactions
-                      .where((t) => t.type == 'income')
-                      .toList();
+                      final incomeTransactions = transactionProvider
+                          .transactions
+                          .where((t) => t.type == 'income')
+                          .toList();
 
-                  final expenseTransactions = transactionProvider.transactions
-                      .where((t) => t.type == 'expense')
-                      .toList();
+                      final expenseTransactions = transactionProvider
+                          .transactions
+                          .where((t) => t.type == 'expense')
+                          .toList();
 
-                  final income = incomeTransactions.fold<double>(
-                    0,
-                    (sum, t) => sum + t.amount,
-                  );
+                      final income = incomeTransactions.fold<double>(
+                        0,
+                        (sum, t) => sum + t.amount,
+                      );
 
-                  final expense = expenseTransactions.fold<double>(
-                    0,
-                    (sum, t) => sum + t.amount,
-                  );
+                      final expense = expenseTransactions.fold<double>(
+                        0,
+                        (sum, t) => sum + t.amount,
+                      );
 
-                  print('Total balance: $totalBalance');
-                  print('Total income: $income');
-                  print('Total expense: $expense');
-
-                  return SingleChildScrollView(
-                    physics: const AlwaysScrollableScrollPhysics(),
-                    child: Padding(
-                      padding: const EdgeInsets.all(16.0),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          _buildBalanceCard(totalBalance, income, expense),
-                          const SizedBox(height: 20),
-                          _buildLimitCard(expense),
-                          const SizedBox(height: 20),
-                          _buildTransactionsList(
-                            incomeTransactions,
-                            expenseTransactions,
+                      return SingleChildScrollView(
+                        physics: const AlwaysScrollableScrollPhysics(),
+                        child: Padding(
+                          padding: const EdgeInsets.all(16.0),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              _buildBalanceCard(totalBalance, income, expense),
+                              const SizedBox(height: 20),
+                              _buildLimitCard(expense),
+                              const SizedBox(height: 20),
+                              _buildTransactionsList(
+                                incomeTransactions,
+                                expenseTransactions,
+                              ),
+                            ],
                           ),
-                        ],
-                      ),
-                    ),
-                  );
-                },
-              ),
+                        ),
+                      );
+                    },
+                  ),
       ),
     );
   }
@@ -487,6 +521,8 @@ class HomeTab extends StatefulWidget {
 
 class _HomeTabState extends State<HomeTab> {
   int _currentIndex = 0;
+  final GlobalKey<_HomeScreenState> _homeScreenKey =
+      GlobalKey<_HomeScreenState>();
 
   final List<Widget> _screens = const [
     HomeScreen(),
@@ -511,13 +547,38 @@ class _HomeTabState extends State<HomeTab> {
             setState(() {
               _currentIndex = index;
             });
+            // Reload data when switching back to home tab
+            if (index == 0) {
+              _homeScreenKey.currentState?._loadInitialData();
+            }
+            // Reload data when switching to account tab
+            if (index == 1) {
+              context.read<TransactionProvider>().fetchTransactions(
+                    refresh: true,
+                    limit: 100,
+                  );
+            }
+            // Reload data when switching to report tab
+            if (index == 3) {
+              context.read<TransactionProvider>().fetchTransactions(
+                    refresh: true,
+                    limit: 100,
+                  );
+            }
+            // Reload data when switching to profile tab
+            if (index == 4) {
+              context.read<WalletProvider>().loadWallets();
+            }
           },
           items: _buildTabBarItems(),
         ),
         tabBuilder: (BuildContext context, int index) {
           return Stack(
             children: [
-              _screens[index],
+              if (index == 0)
+                HomeScreen(key: _homeScreenKey)
+              else
+                _screens[index],
               if (_currentIndex != 2) // Hide FAB on camera screen
                 Positioned(
                   bottom: 20,
