@@ -65,10 +65,10 @@ class _AccountScreenState extends State<AccountScreen> {
           elevation: 0,
           centerTitle: true,
           actions: [
-            IconButton(
+            /** IconButton(
               icon: const Icon(Icons.calendar_today),
               onPressed: () => _showDateRangePicker(context),
-            ),
+            ), */
             IconButton(
               icon: const Icon(Icons.notifications_none),
               onPressed: () {
@@ -272,7 +272,7 @@ class _AccountTabState extends State<AccountTab>
                 children: [
                   const SizedBox(height: 8),
                   // All Transactions header with Add button
-                  Container(
+                  /** Container(
                     padding:
                         const EdgeInsets.symmetric(horizontal: 8, vertical: 12),
                     decoration: BoxDecoration(
@@ -338,7 +338,7 @@ class _AccountTabState extends State<AccountTab>
                       ],
                     ),
                   ),
-                  const SizedBox(height: 12),
+                  const SizedBox(height: 12),  */
 
                   if (transactionProvider.isLoading &&
                       transactionProvider.transactions.isEmpty)

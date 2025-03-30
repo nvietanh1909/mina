@@ -1,9 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:mina/theme/color.dart';
 import 'package:mina/services/category_service.dart';
-import 'package:image_picker/image_picker.dart';
-import 'dart:io';
-import 'package:path/path.dart' as path;
 
 class AddCategoryScreen extends StatefulWidget {
   const AddCategoryScreen({super.key});
@@ -15,10 +12,26 @@ class AddCategoryScreen extends StatefulWidget {
 class _AddCategoryScreenState extends State<AddCategoryScreen> {
   final _formKey = GlobalKey<FormState>();
   final _nameController = TextEditingController();
+  final _descriptionController = TextEditingController();
   final _categoryService = CategoryService();
   bool _isLoading = false;
-  File? _selectedImage;
   String? _selectedIcon;
+  Color _selectedColor = Colors.blue;
+
+  final List<Color> _predefinedColors = [
+    Colors.blue,
+    Colors.red,
+    Colors.green,
+    Colors.orange,
+    Colors.purple,
+    Colors.pink,
+    Colors.teal,
+    Colors.indigo,
+    Colors.amber,
+    Colors.cyan,
+    Colors.deepOrange,
+    Colors.lightBlue,
+  ];
 
   final List<String> _predefinedIcons = [
     '🍔',
@@ -36,7 +49,6 @@ class _AddCategoryScreenState extends State<AddCategoryScreen> {
     '🚇',
     '🚕',
     '🚶',
-    '🚶‍♂️',
     '🛍️',
     '👕',
     '👖',
@@ -52,141 +64,46 @@ class _AddCategoryScreenState extends State<AddCategoryScreen> {
     '🏪',
     '🏨',
     '🏦',
-    '🏰',
     '💊',
-    '🏥',
-    '👨‍⚕️',
-    '💉',
-    '🩺',
-    '🧬',
-    '🧪',
-    '🔬',
     '📚',
     '✏️',
     '📝',
-    '📖',
     '🎓',
-    '📋',
-    '📎',
-    '✂️',
-    '🎮',
-    '🎲',
-    '🎯',
-    '🎨',
-    '🎭',
-    '🎪',
-    '🎟️',
-    '🎠',
     '💸',
     '💰',
     '💵',
     '💳',
-    '💴',
-    '💶',
-    '💷',
-    '💹',
-    '📱',
     '💻',
-    '🖥️',
     '📱',
     '⌚',
     '📷',
-    '📹',
-    '🎥',
+    '🎮',
+    '🎨',
+    '🎵',
     '🏃',
     '⚽',
-    '🏀',
-    '🏈',
-    '⚾',
-    '🏸',
-    '🏓',
-    '🏒',
     '🌳',
-    '🌲',
-    '🌵',
-    '🌴',
     '🌺',
-    '🌸',
-    '🌼',
-    '🌻',
     '🐶',
     '🐱',
-    '🐭',
-    '🐹',
-    '🐰',
-    '🦊',
-    '🐻',
-    '🐼',
-    '🌞',
-    '🌝',
-    '⭐',
-    '🌟',
-    '💫',
-    '✨',
-    '🌙',
-    '☀️',
-    '🎵',
-    '🎶',
-    '🎸',
-    '🎹',
-    '🎺',
-    '🎻',
-    '🥁',
-    '🎼',
-    '🍳',
-    '🍴',
-    '🍽️',
-    '🥄',
-    '🥢',
-    '🥣',
-    '🥤',
-    '🍼',
-    '🚽',
-    '🚰',
-    '🚿',
-    '🛁',
-    '🧼',
-    '🧽',
-    '🧴',
-    '🧹',
     '💡',
     '🔦',
-    '🕯️',
     '💪',
-    '🧠',
-    '❤️',
-    '🧡',
-    '💛',
+    '❤️'
   ];
-
-  Future<void> _pickImage() async {
-    final ImagePicker picker = ImagePicker();
-    final XFile? image = await picker.pickImage(
-      source: ImageSource.gallery,
-      maxWidth: 512,
-      maxHeight: 512,
-      imageQuality: 85,
-    );
-
-    if (image != null) {
-      setState(() {
-        _selectedImage = File(image.path);
-        _selectedIcon = null; // Clear selected icon when picking image
-      });
-    }
-  }
 
   @override
   void dispose() {
     _nameController.dispose();
+    _descriptionController.dispose();
     super.dispose();
   }
 
   Future<void> _handleSubmit() async {
     if (!_formKey.currentState!.validate()) return;
-    if (_selectedImage == null && _selectedIcon == null) {
+    if (_selectedIcon == null) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Please select an image or an icon')),
+        const SnackBar(content: Text('Please select an icon')),
       );
       return;
     }
@@ -194,38 +111,34 @@ class _AddCategoryScreenState extends State<AddCategoryScreen> {
     setState(() => _isLoading = true);
 
     try {
-      // Create request data without null values
       final Map<String, dynamic> categoryData = {
         'name': _nameController.text,
+        'description': _descriptionController.text,
+        'icon': _selectedIcon,
+        'color': '#${_selectedColor.value.toRadixString(16).substring(2)}',
       };
-
-      // Only add image or icon if they are not null
-      if (_selectedImage != null) {
-        categoryData['image'] = _selectedImage!.path;
-      }
-      if (_selectedIcon != null) {
-        categoryData['icon'] = _selectedIcon;
-      }
 
       final result = await _categoryService.createCategory(categoryData);
 
       if (!mounted) return;
 
       if (result['success']) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Category added successfully')),
-        );
-        Navigator.pop(context);
+        Navigator.pop(context, {
+          'id': result['id'],
+          'name': _nameController.text,
+          'description': _descriptionController.text,
+          'icon': _selectedIcon,
+          'color': categoryData['color'],
+        });
       } else {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-              content: Text(result['message'] ?? 'Failed to add category')),
+          SnackBar(content: Text(result['message'])),
         );
       }
     } catch (e) {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Error: ${e.toString()}')),
+        SnackBar(content: Text('Error: $e')),
       );
     } finally {
       if (mounted) {
@@ -237,176 +150,189 @@ class _AddCategoryScreenState extends State<AddCategoryScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.white,
       appBar: AppBar(
-        backgroundColor: Colors.white,
-        elevation: 0,
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back, color: Colors.black),
-          onPressed: () => Navigator.pop(context),
-        ),
-        title: const Text(
-          'Add Category',
-          style: TextStyle(color: Colors.black),
-        ),
+        title: const Text('Add Category'),
+        centerTitle: true,
+        actions: [
+          if (_isLoading)
+            const Center(
+              child: Padding(
+                padding: EdgeInsets.only(right: 16.0),
+                child: SizedBox(
+                  width: 20,
+                  height: 20,
+                  child: CircularProgressIndicator(
+                    strokeWidth: 2,
+                    valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+                  ),
+                ),
+              ),
+            )
+          else
+            IconButton(
+              icon: const Icon(Icons.check),
+              onPressed: _handleSubmit,
+            ),
+        ],
       ),
       body: SingleChildScrollView(
-        padding: const EdgeInsets.all(24.0),
-        child: Form(
-          key: _formKey,
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              TextFormField(
-                controller: _nameController,
-                decoration: InputDecoration(
-                  labelText: 'Category Name',
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                  prefixIcon: const Icon(Icons.category),
-                ),
-                validator: (value) {
-                  if (value == null || value.isEmpty) {
-                    return 'Please enter a category name';
-                  }
-                  return null;
-                },
-              ),
-              const SizedBox(height: 24),
-              const Text(
-                'Select Icon or Upload Image',
-                style: TextStyle(
-                  fontSize: 16,
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-              const SizedBox(height: 8),
-              Center(
-                child: GestureDetector(
-                  onTap: _pickImage,
-                  child: Container(
-                    width: 120,
-                    height: 120,
-                    decoration: BoxDecoration(
-                      color: Colors.grey[200],
-                      borderRadius: BorderRadius.circular(60),
-                      border: Border.all(color: Colors.grey[300]!),
-                    ),
-                    child: _selectedImage != null
-                        ? ClipRRect(
-                            borderRadius: BorderRadius.circular(60),
-                            child: Image.file(
-                              _selectedImage!,
-                              fit: BoxFit.cover,
-                              width: 120,
-                              height: 120,
-                            ),
-                          )
-                        : _selectedIcon != null
-                            ? Center(
-                                child: Text(
-                                  _selectedIcon!,
-                                  style: const TextStyle(fontSize: 48),
-                                ),
-                              )
-                            : const Icon(
-                                Icons.add_a_photo,
-                                size: 40,
-                                color: Colors.grey,
-                              ),
-                  ),
-                ),
-              ),
-              const SizedBox(height: 24),
-              const Text(
-                'Select Icon',
-                style: TextStyle(
-                  fontSize: 16,
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-              const SizedBox(height: 8),
-              Container(
-                height: 200,
-                decoration: BoxDecoration(
-                  border: Border.all(color: Colors.grey[300]!),
-                  borderRadius: BorderRadius.circular(12),
-                ),
-                child: GridView.builder(
-                  padding: const EdgeInsets.all(8),
-                  gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                    crossAxisCount: 8,
-                    childAspectRatio: 1,
-                    crossAxisSpacing: 4,
-                    mainAxisSpacing: 4,
-                  ),
-                  itemCount: _predefinedIcons.length,
-                  itemBuilder: (context, index) {
-                    final icon = _predefinedIcons[index];
-                    return GestureDetector(
-                      onTap: () {
-                        setState(() {
-                          _selectedIcon = icon;
-                          _selectedImage =
-                              null; // Clear selected image when choosing icon
-                        });
-                      },
-                      child: Container(
-                        decoration: BoxDecoration(
-                          color: _selectedIcon == icon
-                              ? Colors.blue.withOpacity(0.2)
-                              : Colors.transparent,
-                          borderRadius: BorderRadius.circular(8),
-                          border: Border.all(
-                            color: _selectedIcon == icon
-                                ? Colors.blue
-                                : Colors.transparent,
-                            width: 2,
-                          ),
-                        ),
-                        child: Center(
-                          child: Text(
-                            icon,
-                            style: const TextStyle(fontSize: 24),
-                          ),
-                        ),
-                      ),
-                    );
-                  },
-                ),
-              ),
-              const SizedBox(height: 32),
-              SizedBox(
-                width: double.infinity,
-                height: 50,
-                child: ElevatedButton(
-                  onPressed: _isLoading ? null : _handleSubmit,
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.blue,
-                    shape: RoundedRectangleBorder(
+        child: Padding(
+          padding: const EdgeInsets.all(16.0),
+          child: Form(
+            key: _formKey,
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                TextFormField(
+                  controller: _nameController,
+                  decoration: InputDecoration(
+                    labelText: 'Category Name',
+                    border: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(12),
                     ),
+                    prefixIcon: const Icon(Icons.category),
                   ),
-                  child: _isLoading
-                      ? const SizedBox(
-                          width: 24,
-                          height: 24,
-                          child: CircularProgressIndicator(
-                            color: Colors.white,
-                            strokeWidth: 2,
-                          ),
-                        )
-                      : const Text(
-                          'Save Category',
-                          style: TextStyle(
-                            fontSize: 16,
-                            fontWeight: FontWeight.bold,
+                  validator: (value) {
+                    if (value == null || value.isEmpty) {
+                      return 'Please enter a category name';
+                    }
+                    return null;
+                  },
+                ),
+                const SizedBox(height: 16),
+                TextFormField(
+                  controller: _descriptionController,
+                  decoration: InputDecoration(
+                    labelText: 'Description (Optional)',
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    prefixIcon: const Icon(Icons.description),
+                  ),
+                  maxLines: 2,
+                ),
+                const SizedBox(height: 24),
+                const Text(
+                  'Select Color',
+                  style: TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+                const SizedBox(height: 16),
+                Container(
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.circular(12),
+                    border: Border.all(color: Colors.grey.shade200),
+                  ),
+                  child: GridView.builder(
+                    shrinkWrap: true,
+                    physics: const NeverScrollableScrollPhysics(),
+                    padding: const EdgeInsets.all(12),
+                    gridDelegate:
+                        const SliverGridDelegateWithFixedCrossAxisCount(
+                      crossAxisCount: 6,
+                      crossAxisSpacing: 12,
+                      mainAxisSpacing: 12,
+                    ),
+                    itemCount: _predefinedColors.length,
+                    itemBuilder: (context, index) {
+                      final color = _predefinedColors[index];
+                      final isSelected = _selectedColor == color;
+                      return InkWell(
+                        onTap: () {
+                          setState(() {
+                            _selectedColor = color;
+                          });
+                        },
+                        borderRadius: BorderRadius.circular(8),
+                        child: Container(
+                          decoration: BoxDecoration(
+                            color: color,
+                            borderRadius: BorderRadius.circular(8),
+                            border: Border.all(
+                              color: isSelected
+                                  ? Colors.white
+                                  : Colors.transparent,
+                              width: 2,
+                            ),
+                            boxShadow: [
+                              if (isSelected)
+                                BoxShadow(
+                                  color: color.withOpacity(0.4),
+                                  spreadRadius: 2,
+                                  blurRadius: 4,
+                                ),
+                            ],
                           ),
                         ),
+                      );
+                    },
+                  ),
                 ),
-              ),
-            ],
+                const SizedBox(height: 24),
+                const Text(
+                  'Select Icon',
+                  style: TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+                const SizedBox(height: 16),
+                Container(
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.circular(12),
+                    border: Border.all(color: Colors.grey.shade200),
+                  ),
+                  child: GridView.builder(
+                    shrinkWrap: true,
+                    physics: const NeverScrollableScrollPhysics(),
+                    padding: const EdgeInsets.all(12),
+                    gridDelegate:
+                        const SliverGridDelegateWithFixedCrossAxisCount(
+                      crossAxisCount: 8,
+                      crossAxisSpacing: 12,
+                      mainAxisSpacing: 12,
+                    ),
+                    itemCount: _predefinedIcons.length,
+                    itemBuilder: (context, index) {
+                      final icon = _predefinedIcons[index];
+                      final isSelected = _selectedIcon == icon;
+                      return InkWell(
+                        onTap: () {
+                          setState(() {
+                            _selectedIcon = icon;
+                          });
+                        },
+                        borderRadius: BorderRadius.circular(8),
+                        child: Container(
+                          decoration: BoxDecoration(
+                            color: isSelected
+                                ? _selectedColor.withOpacity(0.1)
+                                : Colors.transparent,
+                            borderRadius: BorderRadius.circular(8),
+                            border: Border.all(
+                              color: isSelected
+                                  ? _selectedColor
+                                  : Colors.transparent,
+                              width: 2,
+                            ),
+                          ),
+                          child: Center(
+                            child: Text(
+                              icon,
+                              style: const TextStyle(fontSize: 24),
+                            ),
+                          ),
+                        ),
+                      );
+                    },
+                  ),
+                ),
+              ],
+            ),
           ),
         ),
       ),

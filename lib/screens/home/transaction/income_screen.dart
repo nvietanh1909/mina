@@ -8,7 +8,6 @@ import 'package:mina/provider/transaction_provider.dart';
 import 'package:mina/provider/wallet_provider.dart';
 import 'package:mina/screens/home/category/category_screen.dart';
 import 'package:mina/screens/home/date/date_screen.dart';
-import 'package:mina/screens/account/account_screen.dart';
 
 class IncomeScreen extends StatefulWidget {
   const IncomeScreen({super.key});
@@ -116,33 +115,23 @@ class _IncomeScreenState extends State<IncomeScreen> {
         icon: categoryIcon,
       );
 
-      // Create transaction first
-      final createdTransaction = await context
-          .read<TransactionProvider>()
-          .createTransaction(transaction);
+      await context.read<TransactionProvider>().createTransaction(transaction);
 
-      if (createdTransaction == null) {
-        throw Exception('Không thể tạo giao dịch');
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Thêm chi tiêu thành công')),
+        );
+
+        // Reset các trường thông tin
+        setState(() {
+          amountController.text = "0";
+          notesController.text = "";
+          category = 'CHOOSE';
+          categoryId = '';
+          categoryIcon = '';
+          date = DateFormat('d MMM yyyy').format(DateTime.now());
+        });
       }
-
-      // Update wallet balance and fetch transactions
-      final walletProvider = context.read<WalletProvider>();
-      final transactionProvider = context.read<TransactionProvider>();
-
-      await Future.wait([
-        walletProvider.loadWallets(), // Refresh wallet data
-        transactionProvider.fetchTransactions(), // Fetch latest transactions
-      ]);
-
-      if (!mounted) return;
-
-      // Show success message before popping
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Thêm thu nhập thành công')),
-      );
-
-      // Pop back to previous screen with created transaction
-      Navigator.of(context).pop(createdTransaction);
     } catch (e) {
       print('Error in _saveExpense: $e');
       if (mounted) {

@@ -3,6 +3,7 @@ import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
 import '../model/user_model.dart';
 import 'package:mina/constans/constants.dart';
+import 'package:mina/model/wallet_model.dart';
 
 class AuthService {
   static const String baseUrl = AppConfig.baseUrl;
@@ -199,4 +200,67 @@ class AuthService {
       throw Exception("Lỗi kết nối đến server: $e");
     }
   }
+
+  Future<User> uploadAvatar(String filePath) async {
+    try {
+      final token = await getToken();
+      if (token == null) throw Exception('No token found');
+
+      final url = Uri.parse('$baseUrl/api/users/avatar');
+      final request = http.MultipartRequest('POST', url);
+      request.headers['Authorization'] = 'Bearer $token';
+
+      // Add the file
+      final file = await http.MultipartFile.fromPath('avatar', filePath);
+      request.files.add(file);
+
+      final response = await request.send();
+      final responseData = await response.stream.bytesToString();
+
+      final jsonData = json.decode(responseData);
+
+      if (response.statusCode == 200) {
+        if (jsonData['status'] == 'success' && jsonData['data'] != null) {
+          return User.fromJson(jsonData['data']['user']);
+        } else {
+          throw Exception(jsonData['message'] ?? 'Failed to upload avatar');
+        }
+      } else {
+        throw Exception(jsonData['message'] ?? 'Failed to upload avatar');
+      }
+    } catch (e) {
+      print('Upload error: $e'); // Debug log
+      throw Exception('Failed to upload avatar: $e');
+    }
+  }
+
+  Future<Wallet> createWallet({
+    required double monthlyLimit,
+  }) async {
+    try {
+      final token = await getToken();
+      if (token == null) throw Exception('No token found');
+
+      final response = await http.post(
+        Uri.parse('$baseUrl/api/wallets'),
+        headers: {
+          'Authorization': 'Bearer $token',
+          'Content-Type': 'application/json',
+        },
+        body: json.encode({
+          'monthlyLimit': monthlyLimit,
+        }),
+      );
+
+      final data = json.decode(response.body);
+      if (response.statusCode == 201) {
+        return Wallet.fromJson(data['data']);
+      } else {
+        throw Exception(data['message'] ?? 'Failed to create wallet');
+      }
+    } catch (e) {
+      throw Exception('Failed to create wallet: $e');
+    }
+  }
+  
 }

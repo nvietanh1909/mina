@@ -14,7 +14,7 @@ class _TransactionScreenState extends State<TransactionScreen> {
   @override
   Widget build(BuildContext context) {
     return DefaultTabController(
-      length: 2, // Sửa thành 2 vì chỉ có 2 tab
+      length: 2,
       child: Scaffold(
         appBar: AppBar(
           title: const Text(

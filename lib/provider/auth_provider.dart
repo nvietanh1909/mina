@@ -89,7 +89,7 @@ class AuthProvider with ChangeNotifier {
       try {
         await login(savedCredentials['email']!, savedCredentials['password']!);
       } catch (e) {
-        // Đăng nhập tự động thất bại, xóa thông tin đã lưu
+        // Xóa thông tin đăng nhập đã lưu nếu đăng nhập tự động thất bại
         await clearSavedCredentials();
       }
     }

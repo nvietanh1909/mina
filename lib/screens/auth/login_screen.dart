@@ -34,18 +34,18 @@ class _LoginScreenState extends State<LoginScreen> {
     final savedCredentials = await authProvider.getSavedCredentials();
 
     if (savedCredentials != null) {
-      // Nếu có thông tin đăng nhập đã lưu, tự động đăng nhập
+      // Auto login if credentials are saved
       try {
         await authProvider.login(
             savedCredentials['email']!, savedCredentials['password']!);
 
-        // Chuyển đến màn hình chính
+        // Navigate to main screen
         Navigator.pushReplacement(
           context,
           MaterialPageRoute(builder: (context) => HomeTab()),
         );
       } catch (e) {
-        // Đăng nhập tự động thất bại
+        // Auto login failed
         print('Auto login failed: $e');
       }
     }
@@ -89,7 +89,7 @@ class _LoginScreenState extends State<LoginScreen> {
                 SvgPicture.asset('assets/icons/logo.svg',
                     width: 101, height: 50),
                 const SizedBox(height: 8),
-                const Text('Smart consumption',
+                const Text('Smart Consumption',
                     style: TextStyle(fontSize: 16, color: Colors.grey)),
                 const SizedBox(height: 24),
                 _buildEmailField(),
@@ -123,7 +123,7 @@ class _LoginScreenState extends State<LoginScreen> {
           return 'Please enter your email';
         } else if (!RegExp(r"^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,4}")
             .hasMatch(value)) {
-          return 'Enter a valid email';
+          return 'Invalid email format';
         }
         return null;
       },
@@ -172,7 +172,7 @@ class _LoginScreenState extends State<LoginScreen> {
         ),
         TextButton(
           onPressed: () {},
-          child: const Text('Forgot Password?'),
+          child: const Text('Forgot password?'),
         ),
       ],
     );
@@ -191,7 +191,7 @@ class _LoginScreenState extends State<LoginScreen> {
         ),
         child: _isLoading
             ? const CircularProgressIndicator(color: Colors.white)
-            : const Text('Log In',
+            : const Text('Login',
                 style: TextStyle(fontSize: 16, color: Colors.white)),
       ),
     );
@@ -205,7 +205,7 @@ class _LoginScreenState extends State<LoginScreen> {
         TextButton(
           onPressed: () => Navigator.pushReplacement(
               context, MaterialPageRoute(builder: (context) => SignUpScreen())),
-          child: const Text('Sign Up'),
+          child: const Text('Sign up'),
         ),
       ],
     );
