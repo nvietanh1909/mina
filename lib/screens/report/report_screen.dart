@@ -258,11 +258,11 @@ class _ReportScreenState extends State<ReportScreen> {
           'Report',
           style: TextStyle(
             fontSize: 20,
-            fontWeight: FontWeight.w600,
+            fontWeight: FontWeight.w700,
             color: Colors.black87,
           ),
         ),
-        actions: [
+        /** actions: [
           Stack(
             children: [
               IconButton(
@@ -285,7 +285,7 @@ class _ReportScreenState extends State<ReportScreen> {
               ),
             ],
           ),
-        ],
+        ], */
         centerTitle: true,
       ),
       body: _isLoading

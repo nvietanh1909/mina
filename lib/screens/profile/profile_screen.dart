@@ -4,6 +4,10 @@ import 'package:mina/provider/auth_provider.dart';
 import 'package:provider/provider.dart';
 import 'package:mina/services/api_service.dart';
 import 'package:mina/model/user_model.dart';
+import 'package:cached_network_image/cached_network_image.dart';
+import 'package:image_picker/image_picker.dart';
+import 'dart:io';
+import 'package:mime/mime.dart';
 
 class ProfileScreen extends StatefulWidget {
   const ProfileScreen({super.key});
@@ -24,6 +28,7 @@ class _ProfileScreenState extends State<ProfileScreen>
   void initState() {
     super.initState();
     WidgetsBinding.instance.addObserver(this);
+    _fetchProfile();
   }
 
   @override
@@ -35,15 +40,6 @@ class _ProfileScreenState extends State<ProfileScreen>
   @override
   void didChangeAppLifecycleState(AppLifecycleState state) {
     if (state == AppLifecycleState.resumed) {
-      _fetchProfile();
-    }
-  }
-
-  @override
-  void didChangeDependencies() {
-    super.didChangeDependencies();
-    if (!_isInitialized) {
-      _isInitialized = true;
       _fetchProfile();
     }
   }
@@ -73,7 +69,72 @@ class _ProfileScreenState extends State<ProfileScreen>
         _isLoading = false;
       });
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Lỗi khi lấy profile: $e')),
+        SnackBar(content: Text('Error loading profile: $e')),
+      );
+    }
+  }
+
+  Future<void> _pickAndUploadImage() async {
+    try {
+      final ImagePicker picker = ImagePicker();
+      final XFile? image = await picker.pickImage(
+        source: ImageSource.gallery,
+        maxWidth: 512,
+        maxHeight: 512,
+        imageQuality: 85,
+      );
+
+      if (image != null) {
+        // Check if file is an image by checking its extension
+        final extension = image.path.split('.').last.toLowerCase();
+        final allowedExtensions = ['jpg', 'jpeg', 'png', 'gif', 'webp'];
+
+        if (!allowedExtensions.contains(extension)) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+                content: Text(
+                    'Please select a valid image file (JPG, PNG, GIF, or WEBP)')),
+          );
+          return;
+        }
+
+        // Show loading dialog
+        if (!mounted) return;
+        showDialog(
+          context: context,
+          barrierDismissible: false,
+          builder: (BuildContext context) {
+            return const Center(
+              child: CircularProgressIndicator(),
+            );
+          },
+        );
+
+        // Upload image
+        final user = await AuthService().uploadAvatar(image.path);
+
+        // Close loading dialog
+        if (!mounted) return;
+        Navigator.pop(context);
+
+        // Update UI
+        setState(() {
+          _user = user;
+        });
+
+        // Show success message
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Avatar updated successfully')),
+        );
+      }
+    } catch (e) {
+      // Close loading dialog if it's showing
+      if (!mounted) return;
+      Navigator.pop(context);
+
+      // Show error message
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Failed to update avatar: $e')),
       );
     }
   }
@@ -96,8 +157,8 @@ class _ProfileScreenState extends State<ProfileScreen>
                         begin: Alignment.topLeft,
                         end: Alignment.bottomRight,
                         colors: [
-                          Color(0xFF6355E4),
-                          Color(0xFF4599C8),
+                          Color.fromARGB(255, 53, 39, 174),
+                          Color.fromARGB(255, 182, 78, 128),
                         ],
                       ),
                     ),
@@ -107,66 +168,84 @@ class _ProfileScreenState extends State<ProfileScreen>
                       physics: const AlwaysScrollableScrollPhysics(),
                       child: Column(
                         children: [
-                          const SizedBox(height: 20),
+                          const SizedBox(height: 30),
                           // Profile Section
                           Center(
                             child: Column(
                               children: [
                                 Stack(
                                   children: [
-                                    Container(
-                                      width: 100,
-                                      height: 100,
-                                      decoration: BoxDecoration(
-                                        shape: BoxShape.circle,
-                                        color: Colors.white,
-                                        border: Border.all(
+                                    GestureDetector(
+                                      onTap: _pickAndUploadImage,
+                                      child: Container(
+                                        width: 80,
+                                        height: 80,
+                                        decoration: BoxDecoration(
+                                          shape: BoxShape.circle,
                                           color: Colors.white,
-                                          width: 3,
+                                          boxShadow: [
+                                            BoxShadow(
+                                              color:
+                                                  Colors.black.withOpacity(0.1),
+                                              blurRadius: 10,
+                                              offset: const Offset(0, 5),
+                                            ),
+                                          ],
                                         ),
-                                        boxShadow: [
-                                          BoxShadow(
-                                            color:
-                                                Colors.black.withOpacity(0.1),
-                                            blurRadius: 10,
-                                            spreadRadius: 1,
-                                          ),
-                                        ],
-                                      ),
-                                      child: const Icon(
-                                        Icons.person,
-                                        size: 50,
-                                        color: Color(0xFF7B6EF6),
+                                        child: ClipOval(
+                                          child: _user?.avatar != null
+                                              ? CachedNetworkImage(
+                                                  imageUrl: _user!.avatar!,
+                                                  fit: BoxFit.cover,
+                                                  placeholder: (context, url) =>
+                                                      const Center(
+                                                    child:
+                                                        CircularProgressIndicator(),
+                                                  ),
+                                                  errorWidget:
+                                                      (context, url, error) {
+                                                    return const Icon(
+                                                      Icons.person,
+                                                      size: 40,
+                                                      color: Colors.grey,
+                                                    );
+                                                  },
+                                                )
+                                              : const Icon(
+                                                  Icons.person,
+                                                  size: 40,
+                                                  color: Colors.grey,
+                                                ),
+                                        ),
                                       ),
                                     ),
-                                    if (_error != null)
-                                      Positioned(
-                                        right: 0,
-                                        bottom: 0,
-                                        child: Container(
-                                          width: 32,
-                                          height: 32,
-                                          decoration: BoxDecoration(
-                                            color: Colors.white,
-                                            shape: BoxShape.circle,
-                                            boxShadow: [
-                                              BoxShadow(
-                                                color: Colors.black
-                                                    .withOpacity(0.1),
-                                                blurRadius: 4,
-                                                spreadRadius: 1,
-                                              ),
-                                            ],
-                                          ),
-                                          child: IconButton(
-                                            padding: EdgeInsets.zero,
-                                            icon: const Icon(Icons.refresh,
-                                                size: 20),
-                                            color: const Color(0xFF7B6EF6),
-                                            onPressed: _fetchProfile,
-                                          ),
+                                    Positioned(
+                                      right: 0,
+                                      bottom: 0,
+                                      child: Container(
+                                        width: 32,
+                                        height: 32,
+                                        decoration: BoxDecoration(
+                                          color: Colors.white,
+                                          shape: BoxShape.circle,
+                                          boxShadow: [
+                                            BoxShadow(
+                                              color:
+                                                  Colors.black.withOpacity(0.1),
+                                              blurRadius: 4,
+                                              spreadRadius: 1,
+                                            ),
+                                          ],
+                                        ),
+                                        child: IconButton(
+                                          padding: EdgeInsets.zero,
+                                          icon: const Icon(Icons.camera_alt,
+                                              size: 20),
+                                          color: const Color(0xFF7B6EF6),
+                                          onPressed: _pickAndUploadImage,
                                         ),
                                       ),
+                                    ),
                                   ],
                                 ),
                                 const SizedBox(height: 16),

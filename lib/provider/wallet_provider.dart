@@ -21,7 +21,6 @@ class WalletProvider with ChangeNotifier {
 
       final response = await _walletService.getAllWallets();
       _wallets = response;
-      
     } catch (e) {
       _error = e.toString();
     } finally {
@@ -30,14 +29,14 @@ class WalletProvider with ChangeNotifier {
     }
   }
 
-  Future<void> createWallet(String name, String? description, String currency) async {
+  Future<void> createWallet(
+      String name, String? description, String currency) async {
     try {
       _isLoading = true;
       notifyListeners();
 
       await _walletService.createWallet(name, description, currency);
       await loadWallets();
-      
     } catch (e) {
       _error = e.toString();
       notifyListeners();
@@ -45,14 +44,34 @@ class WalletProvider with ChangeNotifier {
     }
   }
 
-  Future<void> updateWallet(String id, String name, String? description) async {
+  Future<void> updateWallet(String id, String name, String? description,
+      {bool? isDefault, double? monthlyLimit}) async {
     try {
       _isLoading = true;
       notifyListeners();
 
-      await _walletService.updateWallet(id, name, description);
+      await _walletService.updateWallet(
+        id,
+        name,
+        description,
+        isDefault: isDefault,
+        monthlyLimit: monthlyLimit,
+      );
       await loadWallets();
-      
+    } catch (e) {
+      _error = e.toString();
+      notifyListeners();
+      throw e;
+    }
+  }
+
+  Future<void> updateMonthlyLimit(String id, double monthlyLimit) async {
+    try {
+      _isLoading = true;
+      notifyListeners();
+
+      await _walletService.updateMonthlyLimit(id, monthlyLimit);
+      await loadWallets();
     } catch (e) {
       _error = e.toString();
       notifyListeners();
@@ -67,7 +86,6 @@ class WalletProvider with ChangeNotifier {
 
       await _walletService.deleteWallet(id);
       await loadWallets();
-      
     } catch (e) {
       _error = e.toString();
       notifyListeners();

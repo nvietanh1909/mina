@@ -78,6 +78,21 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
     }
   }
 
+  Future<void> _navigateToTransaction() async {
+    final result = await Navigator.push(
+      context,
+      MaterialPageRoute(builder: (context) => const TransactionScreen()),
+    );
+
+    // Kiểm tra kết quả trả về từ màn hình transaction
+    if (result != null && result is Map<String, dynamic>) {
+      if (result['needRefresh'] == true) {
+        // Cập nhật lại dữ liệu
+        await _loadInitialData();
+      }
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -89,6 +104,15 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
           elevation: 0,
         ),
       ),
+      floatingActionButton: FloatingActionButton(
+        onPressed: _navigateToTransaction,
+        backgroundColor: const Color(0xFF1D61E7),
+        child: const Icon(Icons.add),
+      ),
+      floatingActionButtonLocation: FloatingActionButtonLocation.centerDocked,
+      bottomNavigationBar: BottomAppBar(
+          // ... existing bottom navigation bar code ...
+          ),
       body: RefreshIndicator(
         onRefresh: _loadInitialData,
         child: _isLoading

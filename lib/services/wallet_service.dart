@@ -53,15 +53,17 @@ class WalletService {
     }
   }
 
-  Future<Wallet> updateWallet(
-      String id, String name, String? description) async {
+  Future<Wallet> updateWallet(String id, String name, String? description,
+      {bool? isDefault, double? monthlyLimit}) async {
     try {
       final response = await http.patch(
         Uri.parse('$baseUrl/api/wallets/$id'),
         headers: await _getHeaders(),
         body: jsonEncode({
-          'name': name,
-          'description': description,
+          if (name != null) 'name': name,
+          if (description != null) 'description': description,
+          if (isDefault != null) 'isDefault': isDefault,
+          if (monthlyLimit != null) 'monthlyLimit': monthlyLimit,
         }),
       );
 
@@ -103,5 +105,23 @@ class WalletService {
   Future<String?> _getToken() async {
     final prefs = await SharedPreferences.getInstance();
     return prefs.getString(tokenKey);
+  }
+
+  Future<void> updateMonthlyLimit(String id, double monthlyLimit) async {
+    try {
+      final response = await http.patch(
+        Uri.parse('$baseUrl/api/wallets/$id'),
+        headers: await _getHeaders(),
+        body: jsonEncode({
+          'monthlyLimit': monthlyLimit,
+        }),
+      );
+
+      if (response.statusCode != 200) {
+        throw Exception(jsonDecode(response.body)['message']);
+      }
+    } catch (e) {
+      throw Exception('Không thể cập nhật giới hạn chi tiêu: ${e.toString()}');
+    }
   }
 }
