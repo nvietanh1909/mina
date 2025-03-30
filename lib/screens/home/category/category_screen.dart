@@ -39,12 +39,18 @@ class _CategoryScreenState extends State<CategoryScreen> {
         ),
         actions: [
           IconButton(
-            onPressed: () {
-              Navigator.push(
+            onPressed: () async {
+              final result = await Navigator.push(
                 context,
                 MaterialPageRoute(
-                    builder: (context) => const AddCategoryScreen()),
+                  builder: (context) => const AddCategoryScreen(),
+                ),
               );
+
+              // Refresh categories when returning from add screen
+              if (result != null && mounted) {
+                context.read<CategoryProvider>().loadCategories();
+              }
             },
             icon: const Icon(Icons.add),
           ),

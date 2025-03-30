@@ -14,12 +14,11 @@ class CategoryService {
         body: categoryData,
       );
 
-      if (response != null &&
-          response['data'] != null &&
-          response['data']['category'] != null) {
+      if (response != null && response['success'] == true) {
+        final category = response['data'];
         return {
           'success': true,
-          'id': response['data']['category']['id'],
+          'id': category['_id'],
           'message': 'Category created successfully'
         };
       } else {
@@ -29,6 +28,7 @@ class CategoryService {
         };
       }
     } catch (e) {
+      print('Error in createCategory: $e'); // Debug log
       return {
         'success': false,
         'message': e.toString(),
