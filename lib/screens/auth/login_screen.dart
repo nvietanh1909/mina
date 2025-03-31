@@ -34,20 +34,11 @@ class _LoginScreenState extends State<LoginScreen> {
     final savedCredentials = await authProvider.getSavedCredentials();
 
     if (savedCredentials != null) {
-      // Auto login if credentials are saved
-      try {
-        await authProvider.login(
-            savedCredentials['email']!, savedCredentials['password']!);
-
-        // Navigate to main screen
-        Navigator.pushReplacement(
-          context,
-          MaterialPageRoute(builder: (context) => HomeTab()),
-        );
-      } catch (e) {
-        // Auto login failed
-        print('Auto login failed: $e');
-      }
+      setState(() {
+        _emailController.text = savedCredentials['email']!;
+        _passwordController.text = savedCredentials['password']!;
+        _rememberMe = true;
+      });
     }
   }
 
@@ -60,16 +51,22 @@ class _LoginScreenState extends State<LoginScreen> {
             _emailController.text, _passwordController.text,
             rememberMe: _rememberMe);
 
-        Navigator.pushReplacement(
-          context,
-          MaterialPageRoute(builder: (context) => HomeTab()),
-        );
+        if (mounted) {
+          Navigator.pushReplacement(
+            context,
+            MaterialPageRoute(builder: (context) => HomeTab()),
+          );
+        }
       } catch (e) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(e.toString())),
-        );
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text(e.toString())),
+          );
+        }
       } finally {
-        setState(() => _isLoading = false);
+        if (mounted) {
+          setState(() => _isLoading = false);
+        }
       }
     }
   }

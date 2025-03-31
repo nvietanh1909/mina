@@ -8,6 +8,7 @@ import 'package:provider/provider.dart';
 import 'signup_screen.dart';
 import 'package:mina/screens/home/home_screen.dart';
 import 'package:mina/services/otp_service.dart';
+import 'dart:convert';
 
 class OtpScreen extends StatefulWidget {
   final String email;
@@ -105,46 +106,85 @@ class _OtpScreenState extends State<OtpScreen> {
     });
 
     try {
-      int otpValue = int.tryParse(pinController.text) ?? 0;
-      if (otpValue == 0) {
-        setState(() {
-          _errorMessage = 'Mã OTP không hợp lệ';
-        });
-        return;
-      }
-
-      String otpCode = otpValue.toString();
-      print('Verifying OTP: $otpCode (${otpCode.runtimeType})');
+      String otpCode = pinController.text;
+      print('Verifying OTP: $otpCode');
 
       final result = await _otpService.verifyOTP(widget.email, otpCode);
       print('Verify result: $result');
 
       if (result['success'] == true) {
+        print('OTP verification successful');
+
+        // Show success message for OTP verification
         if (mounted) {
-          final authProvider = Provider.of<AuthProvider>(context);
-          await _authService.register(
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('OTP xác thực thành công'),
+              backgroundColor: Colors.green,
+              duration: Duration(seconds: 2),
+            ),
+          );
+        }
+
+        // Proceed with registration
+        try {
+          final registerResult = await _authService.register(
             "${widget.firstName} ${widget.lastName}",
             widget.email,
             widget.password,
           );
-          Navigator.pushReplacement(
-            context,
-            MaterialPageRoute(builder: (context) => HomeTab()),
-          );
+          print('Register result: $registerResult');
+
+          if (registerResult['status'] == 'success') {
+            if (!mounted) return;
+
+            // Show success message
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(
+                content: Text('Đăng ký thành công'),
+                backgroundColor: Colors.green,
+                duration: Duration(seconds: 2),
+              ),
+            );
+
+            // Navigate to login screen
+            Navigator.pushAndRemoveUntil(
+              context,
+              MaterialPageRoute(builder: (context) => const LoginScreen()),
+              (route) => false,
+            );
+          } else {
+            // Registration failed
+            if (!mounted) return;
+            setState(() {
+              _errorMessage =
+                  registerResult['message'] ?? 'Đăng ký không thành công';
+            });
+          }
+        } catch (e) {
+          print('Registration error: $e');
+          if (!mounted) return;
+          setState(() {
+            _errorMessage = 'Lỗi đăng ký tài khoản: ${e.toString()}';
+          });
         }
       } else {
+        // OTP verification failed
         setState(() {
-          _errorMessage = result['message'];
+          _errorMessage = result['message'] ?? 'Mã OTP không hợp lệ';
         });
       }
     } catch (e) {
+      print('OTP verification error: $e');
       setState(() {
-        _errorMessage = 'Lỗi xác thực. Vui lòng thử lại.';
+        _errorMessage = 'Lỗi xác thực: ${e.toString()}';
       });
     } finally {
-      setState(() {
-        _isLoading = false;
-      });
+      if (mounted) {
+        setState(() {
+          _isLoading = false;
+        });
+      }
     }
   }
 

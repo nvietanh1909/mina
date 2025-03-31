@@ -130,14 +130,11 @@ class _AddCategoryScreenState extends State<AddCategoryScreen> {
             .toList(),
       };
 
-      print('Sending category data: $categoryData'); // Debug log
-
       final result = await _categoryService.createCategory(categoryData);
 
       if (!mounted) return;
 
       if (result['success']) {
-        // Return true to indicate successful creation
         Navigator.pop(context, true);
       } else {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -148,7 +145,6 @@ class _AddCategoryScreenState extends State<AddCategoryScreen> {
         );
       }
     } catch (e) {
-      print('Error in _handleSubmit: $e'); // Debug log
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
@@ -180,223 +176,342 @@ class _AddCategoryScreenState extends State<AddCategoryScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: Colors.grey[50],
       appBar: AppBar(
+        backgroundColor: Colors.white,
+        elevation: 0,
         title: const Text(
-          'ADD CATEGORY',
-          style: TextStyle(fontWeight: FontWeight.bold),
+          'New Category',
+          style: TextStyle(
+            color: Colors.black87,
+            fontSize: 20,
+            fontWeight: FontWeight.bold,
+          ),
         ),
         centerTitle: true,
-        actions: [
-          if (_isLoading)
-            const Center(
-              child: Padding(
-                padding: EdgeInsets.only(right: 16.0),
-                child: SizedBox(
-                  width: 20,
-                  height: 20,
-                  child: CircularProgressIndicator(
-                    strokeWidth: 2,
-                    valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
-                  ),
-                ),
-              ),
-            )
-          else
-            IconButton(
-              icon: const Icon(Icons.check),
-              onPressed: _handleSubmit,
+        leading: IconButton(
+          icon: Container(
+            padding: const EdgeInsets.all(8),
+            decoration: BoxDecoration(
+              color: Colors.grey[100],
+              shape: BoxShape.circle,
             ),
+            child: const Icon(Icons.arrow_back_ios_new,
+                size: 16, color: Colors.black87),
+          ),
+          onPressed: () => Navigator.pop(context),
+        ),
+        actions: [
+          Padding(
+            padding: const EdgeInsets.only(right: 8),
+            child: IconButton(
+              onPressed: _isLoading ? null : _handleSubmit,
+              icon: Container(
+                padding: const EdgeInsets.all(8),
+                decoration: BoxDecoration(
+                  color: Colors.blue[50],
+                  shape: BoxShape.circle,
+                ),
+                child: _isLoading
+                    ? SizedBox(
+                        width: 20,
+                        height: 20,
+                        child: CircularProgressIndicator(
+                          strokeWidth: 2,
+                          valueColor:
+                              AlwaysStoppedAnimation<Color>(Colors.blue[700]!),
+                        ),
+                      )
+                    : Icon(Icons.check, size: 20, color: Colors.blue[700]),
+              ),
+            ),
+          ),
         ],
       ),
       body: SingleChildScrollView(
-        child: Padding(
-          padding: const EdgeInsets.all(16.0),
-          child: Form(
-            key: _formKey,
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                TextFormField(
-                  controller: _nameController,
-                  decoration: InputDecoration(
-                    labelText: 'Category Name',
-                    border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                    prefixIcon: const Icon(Icons.category),
-                  ),
-                  validator: (value) {
-                    if (value == null || value.isEmpty) {
-                      return 'Please enter a category name';
-                    }
-                    return null;
-                  },
-                ),
-                const SizedBox(height: 16),
-                TextFormField(
-                  controller: _descriptionController,
-                  decoration: InputDecoration(
-                    labelText: 'Description (Optional)',
-                    border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                    prefixIcon: const Icon(Icons.description),
-                  ),
-                  maxLines: 2,
-                ),
-                const SizedBox(height: 24),
-                const Text(
-                  'Select Color',
-                  style: TextStyle(
-                    fontSize: 16,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-                const SizedBox(height: 16),
-                Container(
-                  decoration: BoxDecoration(
-                    color: Colors.white,
-                    borderRadius: BorderRadius.circular(12),
-                    border: Border.all(color: Colors.grey.shade200),
-                  ),
-                  child: GridView.builder(
-                    shrinkWrap: true,
-                    physics: const NeverScrollableScrollPhysics(),
-                    padding: const EdgeInsets.all(12),
-                    gridDelegate:
-                        const SliverGridDelegateWithFixedCrossAxisCount(
-                      crossAxisCount: 6,
-                      crossAxisSpacing: 12,
-                      mainAxisSpacing: 12,
-                    ),
-                    itemCount: _predefinedColors.length,
-                    itemBuilder: (context, index) {
-                      final color = _predefinedColors[index];
-                      final isSelected = _selectedColor == color;
-                      return InkWell(
-                        onTap: () {
-                          setState(() {
-                            _selectedColor = color;
-                            // Update color for all selected icons
-                            _selectedIcons = _selectedIcons.map((icon) {
-                              return CategoryIcon(
-                                id: icon.id,
-                                iconPath: icon.iconPath,
-                                color:
-                                    '#${color.value.toRadixString(16).substring(2)}',
-                              );
-                            }).toList();
-                          });
-                        },
-                        borderRadius: BorderRadius.circular(8),
-                        child: Container(
-                          decoration: BoxDecoration(
-                            color: color,
-                            borderRadius: BorderRadius.circular(8),
-                            border: Border.all(
-                              color: isSelected
-                                  ? Colors.white
-                                  : Colors.transparent,
-                              width: 2,
-                            ),
-                            boxShadow: [
-                              if (isSelected)
-                                BoxShadow(
-                                  color: color.withOpacity(0.4),
-                                  spreadRadius: 2,
-                                  blurRadius: 4,
-                                ),
-                            ],
-                          ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Container(
+              color: Colors.white,
+              padding: const EdgeInsets.all(16),
+              child: Form(
+                key: _formKey,
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    TextFormField(
+                      controller: _nameController,
+                      decoration: InputDecoration(
+                        labelText: 'Category Name',
+                        labelStyle: TextStyle(
+                          color: Colors.grey[600],
+                          fontSize: 14,
                         ),
-                      );
-                    },
-                  ),
-                ),
-                const SizedBox(height: 24),
-                const Text(
-                  'Select Icons',
-                  style: TextStyle(
-                    fontSize: 16,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-                const SizedBox(height: 16),
-                Container(
-                  decoration: BoxDecoration(
-                    color: Colors.white,
-                    borderRadius: BorderRadius.circular(12),
-                    border: Border.all(color: Colors.grey.shade200),
-                  ),
-                  child: GridView.builder(
-                    shrinkWrap: true,
-                    physics: const NeverScrollableScrollPhysics(),
-                    padding: const EdgeInsets.all(12),
-                    gridDelegate:
-                        const SliverGridDelegateWithFixedCrossAxisCount(
-                      crossAxisCount: 8,
-                      crossAxisSpacing: 12,
-                      mainAxisSpacing: 12,
-                    ),
-                    itemCount: _predefinedIcons.length,
-                    itemBuilder: (context, index) {
-                      final icon = _predefinedIcons[index];
-                      final isSelected =
-                          _selectedIcons.any((i) => i.iconPath == icon);
-                      return InkWell(
-                        onTap: () => _toggleIcon(icon),
-                        borderRadius: BorderRadius.circular(8),
-                        child: Container(
-                          decoration: BoxDecoration(
-                            color: isSelected
-                                ? _selectedColor.withOpacity(0.1)
-                                : Colors.transparent,
-                            borderRadius: BorderRadius.circular(8),
-                            border: Border.all(
-                              color: isSelected
-                                  ? _selectedColor
-                                  : Colors.transparent,
-                              width: 2,
-                            ),
-                          ),
-                          child: Center(
-                            child: Text(
-                              icon,
-                              style: const TextStyle(fontSize: 24),
-                            ),
-                          ),
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(12),
+                          borderSide: BorderSide(color: Colors.grey[300]!),
                         ),
-                      );
-                    },
-                  ),
+                        enabledBorder: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(12),
+                          borderSide: BorderSide(color: Colors.grey[300]!),
+                        ),
+                        focusedBorder: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(12),
+                          borderSide: BorderSide(color: Colors.blue[400]!),
+                        ),
+                        prefixIcon: Icon(Icons.category_outlined,
+                            color: Colors.grey[600]),
+                        contentPadding: const EdgeInsets.symmetric(
+                            horizontal: 16, vertical: 16),
+                      ),
+                      validator: (value) {
+                        if (value == null || value.isEmpty) {
+                          return 'Please enter a category name';
+                        }
+                        return null;
+                      },
+                    ),
+                    const SizedBox(height: 16),
+                    TextFormField(
+                      controller: _descriptionController,
+                      decoration: InputDecoration(
+                        labelText: 'Description (Optional)',
+                        labelStyle: TextStyle(
+                          color: Colors.grey[600],
+                          fontSize: 14,
+                        ),
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(12),
+                          borderSide: BorderSide(color: Colors.grey[300]!),
+                        ),
+                        enabledBorder: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(12),
+                          borderSide: BorderSide(color: Colors.grey[300]!),
+                        ),
+                        focusedBorder: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(12),
+                          borderSide: BorderSide(color: Colors.blue[400]!),
+                        ),
+                        prefixIcon: Icon(Icons.description_outlined,
+                            color: Colors.grey[600]),
+                        contentPadding: const EdgeInsets.symmetric(
+                            horizontal: 16, vertical: 16),
+                      ),
+                      maxLines: 3,
+                    ),
+                  ],
                 ),
-                if (_selectedIcons.isNotEmpty) ...[
-                  const SizedBox(height: 24),
-                  const Text(
-                    'Selected Icons',
+              ),
+            ),
+            const SizedBox(height: 8),
+            Container(
+              color: Colors.white,
+              padding: const EdgeInsets.all(16),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    'Category Color',
                     style: TextStyle(
                       fontSize: 16,
-                      fontWeight: FontWeight.bold,
+                      fontWeight: FontWeight.w600,
+                      color: Colors.grey[800],
                     ),
                   ),
                   const SizedBox(height: 16),
                   Container(
-                    height: 60,
+                    padding: const EdgeInsets.all(16),
                     decoration: BoxDecoration(
-                      color: Colors.white,
+                      color: Colors.grey[50],
                       borderRadius: BorderRadius.circular(12),
-                      border: Border.all(color: Colors.grey.shade200),
+                      border: Border.all(color: Colors.grey[200]!),
                     ),
-                    child: ListView.builder(
-                      scrollDirection: Axis.horizontal,
-                      padding: const EdgeInsets.symmetric(horizontal: 12),
-                      itemCount: _selectedIcons.length,
+                    child: GridView.builder(
+                      shrinkWrap: true,
+                      physics: const NeverScrollableScrollPhysics(),
+                      gridDelegate:
+                          const SliverGridDelegateWithFixedCrossAxisCount(
+                        crossAxisCount: 6,
+                        crossAxisSpacing: 12,
+                        mainAxisSpacing: 12,
+                        childAspectRatio: 1,
+                      ),
+                      itemCount: _predefinedColors.length,
                       itemBuilder: (context, index) {
-                        final icon = _selectedIcons[index];
-                        return Padding(
-                          padding: const EdgeInsets.symmetric(vertical: 8),
+                        final color = _predefinedColors[index];
+                        final isSelected = _selectedColor == color;
+                        return InkWell(
+                          onTap: () {
+                            setState(() {
+                              _selectedColor = color;
+                              _selectedIcons = _selectedIcons.map((icon) {
+                                return CategoryIcon(
+                                  id: icon.id,
+                                  iconPath: icon.iconPath,
+                                  color:
+                                      '#${color.value.toRadixString(16).substring(2)}',
+                                );
+                              }).toList();
+                            });
+                          },
                           child: Container(
-                            margin: const EdgeInsets.only(right: 8),
+                            decoration: BoxDecoration(
+                              color: color,
+                              shape: BoxShape.circle,
+                              border: Border.all(
+                                color: isSelected
+                                    ? Colors.white
+                                    : Colors.transparent,
+                                width: 2,
+                              ),
+                              boxShadow: [
+                                if (isSelected)
+                                  BoxShadow(
+                                    color: color.withOpacity(0.4),
+                                    blurRadius: 8,
+                                    spreadRadius: 2,
+                                  ),
+                              ],
+                            ),
+                            child: isSelected
+                                ? const Icon(Icons.check, color: Colors.white)
+                                : null,
+                          ),
+                        );
+                      },
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(height: 8),
+            Container(
+              color: Colors.white,
+              padding: const EdgeInsets.all(16),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Text(
+                        'Category Icons',
+                        style: TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.w600,
+                          color: Colors.grey[800],
+                        ),
+                      ),
+                      if (_selectedIcons.isNotEmpty)
+                        Text(
+                          '${_selectedIcons.length} selected',
+                          style: TextStyle(
+                            fontSize: 14,
+                            color: Colors.grey[600],
+                          ),
+                        ),
+                    ],
+                  ),
+                  const SizedBox(height: 16),
+                  Container(
+                    padding: const EdgeInsets.all(16),
+                    decoration: BoxDecoration(
+                      color: Colors.grey[50],
+                      borderRadius: BorderRadius.circular(12),
+                      border: Border.all(color: Colors.grey[200]!),
+                    ),
+                    child: GridView.builder(
+                      shrinkWrap: true,
+                      physics: const NeverScrollableScrollPhysics(),
+                      gridDelegate:
+                          const SliverGridDelegateWithFixedCrossAxisCount(
+                        crossAxisCount: 8,
+                        crossAxisSpacing: 12,
+                        mainAxisSpacing: 12,
+                        childAspectRatio: 1,
+                      ),
+                      itemCount: _predefinedIcons.length,
+                      itemBuilder: (context, index) {
+                        final icon = _predefinedIcons[index];
+                        final isSelected =
+                            _selectedIcons.any((i) => i.iconPath == icon);
+                        return InkWell(
+                          onTap: () => _toggleIcon(icon),
+                          child: Container(
+                            decoration: BoxDecoration(
+                              color: isSelected
+                                  ? _selectedColor.withOpacity(0.1)
+                                  : Colors.white,
+                              borderRadius: BorderRadius.circular(8),
+                              border: Border.all(
+                                color: isSelected
+                                    ? _selectedColor
+                                    : Colors.grey[200]!,
+                                width: isSelected ? 2 : 1,
+                              ),
+                              boxShadow: [
+                                if (isSelected)
+                                  BoxShadow(
+                                    color: _selectedColor.withOpacity(0.2),
+                                    blurRadius: 4,
+                                    spreadRadius: 1,
+                                  ),
+                              ],
+                            ),
+                            child: Center(
+                              child: Text(
+                                icon,
+                                style: const TextStyle(fontSize: 24),
+                              ),
+                            ),
+                          ),
+                        );
+                      },
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            if (_selectedIcons.isNotEmpty) ...[
+              const SizedBox(height: 8),
+              Container(
+                color: Colors.white,
+                padding: const EdgeInsets.all(16),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'Selected Icons',
+                      style: TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.w600,
+                        color: Colors.grey[800],
+                      ),
+                    ),
+                    const SizedBox(height: 16),
+                    Container(
+                      height: 56,
+                      decoration: BoxDecoration(
+                        color: Colors.grey[50],
+                        borderRadius: BorderRadius.circular(12),
+                        border: Border.all(color: Colors.grey[200]!),
+                      ),
+                      child: ListView.builder(
+                        scrollDirection: Axis.horizontal,
+                        padding: const EdgeInsets.symmetric(horizontal: 8),
+                        itemCount: _selectedIcons.length,
+                        itemBuilder: (context, index) {
+                          final icon = _selectedIcons[index];
+                          return Container(
+                            margin: const EdgeInsets.symmetric(
+                              horizontal: 4,
+                              vertical: 8,
+                            ),
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 12,
+                              vertical: 4,
+                            ),
                             decoration: BoxDecoration(
                               color: _selectedColor.withOpacity(0.1),
                               borderRadius: BorderRadius.circular(8),
@@ -407,29 +522,31 @@ class _AddCategoryScreenState extends State<AddCategoryScreen> {
                             ),
                             child: Row(
                               children: [
-                                Padding(
-                                  padding:
-                                      const EdgeInsets.symmetric(horizontal: 8),
-                                  child: Text(
-                                    icon.iconPath,
-                                    style: const TextStyle(fontSize: 24),
-                                  ),
+                                Text(
+                                  icon.iconPath,
+                                  style: const TextStyle(fontSize: 24),
                                 ),
-                                IconButton(
-                                  icon: const Icon(Icons.close, size: 16),
-                                  onPressed: () => _toggleIcon(icon.iconPath),
+                                const SizedBox(width: 4),
+                                InkWell(
+                                  onTap: () => _toggleIcon(icon.iconPath),
+                                  child: Icon(
+                                    Icons.close,
+                                    size: 16,
+                                    color: _selectedColor,
+                                  ),
                                 ),
                               ],
                             ),
-                          ),
-                        );
-                      },
+                          );
+                        },
+                      ),
                     ),
-                  ),
-                ],
-              ],
-            ),
-          ),
+                  ],
+                ),
+              ),
+            ],
+            const SizedBox(height: 24),
+          ],
         ),
       ),
     );

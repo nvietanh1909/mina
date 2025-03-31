@@ -62,6 +62,12 @@ class _ReportScreenState extends State<ReportScreen>
     _loadStats();
   }
 
+  @override
+  void didUpdateWidget(ReportScreen oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    _loadStats();
+  }
+
   Future<void> _loadStats() async {
     setState(() => _isLoading = true);
     try {
