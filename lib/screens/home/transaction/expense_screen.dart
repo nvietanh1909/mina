@@ -68,16 +68,44 @@ class _ExpenseScreenState extends State<ExpenseScreen> {
       );
 
       if (result != null) {
+        print('Scan result: ${result.category}, ${result.icon}'); // Debug log
+
         setState(() {
-          amountController.text = result.amount.toString();
-          category = result.category;
+          // Format amount to remove .0
+          final amount = result.amount.toInt();
+          amountController.text = amount.toString();
+
+          // Update category only if it's not empty
+          if (result.category.isNotEmpty && result.category != 'CHOOSE') {
+            category = result.category;
+          }
+
+          // Update icon only if it's not empty
+          if (result.icon.isNotEmpty) {
+            categoryIcon = result.icon;
+          }
+
+          // Update notes and date
           notesController.text = result.notes;
+          date = result.date;
+
+          // Show success message
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('Đã quét hóa đơn thành công'),
+              backgroundColor: Colors.green,
+            ),
+          );
         });
       }
     } catch (e) {
+      print('Error in bill scanner: $e'); // Debug log
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Error scanning bill: $e')),
+          SnackBar(
+            content: Text('Lỗi quét hóa đơn: $e'),
+            backgroundColor: Colors.red,
+          ),
         );
       }
     }
