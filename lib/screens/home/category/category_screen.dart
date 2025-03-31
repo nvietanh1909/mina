@@ -217,7 +217,7 @@ class _CategoryScreenState extends State<CategoryScreen> {
     return Column(
       children: categories.map((category) {
         return Container(
-          margin: const EdgeInsets.symmetric(horizontal: 16),
+          margin: const EdgeInsets.fromLTRB(16, 0, 16, 16),
           decoration: BoxDecoration(
             color: Colors.white,
             borderRadius: BorderRadius.circular(16),
@@ -229,51 +229,163 @@ class _CategoryScreenState extends State<CategoryScreen> {
               ),
             ],
           ),
-          child: Padding(
-            padding: const EdgeInsets.all(16),
-            child: GridView.builder(
-              shrinkWrap: true,
-              physics: const NeverScrollableScrollPhysics(),
-              gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                crossAxisCount: 4,
-                childAspectRatio: 1,
-                crossAxisSpacing: 12,
-                mainAxisSpacing: 12,
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Padding(
+                padding: const EdgeInsets.all(16),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Row(
+                      children: [
+                        Container(
+                          padding: const EdgeInsets.all(8),
+                          decoration: BoxDecoration(
+                            color: Colors.blue[50],
+                            borderRadius: BorderRadius.circular(8),
+                          ),
+                          child: Icon(
+                            Icons.category_outlined,
+                            size: 16,
+                            color: Colors.blue[700],
+                          ),
+                        ),
+                        const SizedBox(width: 12),
+                        Container(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 10,
+                            vertical: 4,
+                          ),
+                          decoration: BoxDecoration(
+                            color: Colors.grey[100],
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                          child: Text(
+                            '${category.icons?.length ?? 0} icons',
+                            style: TextStyle(
+                              fontSize: 12,
+                              color: Colors.grey[700],
+                              fontWeight: FontWeight.w500,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                    IconButton(
+                      onPressed: () => _showDeleteDialog(category),
+                      icon: Icon(
+                        Icons.delete_outline,
+                        color: Colors.red[400],
+                        size: 20,
+                      ),
+                      splashRadius: 24,
+                      tooltip: 'Delete category',
+                    ),
+                  ],
+                ),
               ),
-              itemCount: category.icons?.length ?? 0,
-              itemBuilder: (context, index) {
-                final icon = category.icons?[index];
-                if (icon == null) return const SizedBox();
-                return GestureDetector(
-                  onTap: () {
-                    Navigator.pop(context, {
-                      'id': category.id,
-                      'name': category.name,
-                      'icon': icon.iconPath,
-                    });
-                  },
-                  child: Container(
-                    decoration: BoxDecoration(
-                      color: Colors.grey[50],
-                      borderRadius: BorderRadius.circular(12),
-                      border: Border.all(
-                        color: Colors.grey[200]!,
-                        width: 1,
-                      ),
-                    ),
-                    child: Center(
-                      child: Text(
-                        icon.iconPath,
-                        style: const TextStyle(fontSize: 24),
-                      ),
-                    ),
+              Padding(
+                padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
+                child: GridView.builder(
+                  shrinkWrap: true,
+                  physics: const NeverScrollableScrollPhysics(),
+                  gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                    crossAxisCount: 4,
+                    childAspectRatio: 1,
+                    crossAxisSpacing: 12,
+                    mainAxisSpacing: 12,
                   ),
-                );
-              },
-            ),
+                  itemCount: category.icons?.length ?? 0,
+                  itemBuilder: (context, index) {
+                    final icon = category.icons?[index];
+                    if (icon == null) return const SizedBox();
+                    return GestureDetector(
+                      onTap: () {
+                        Navigator.pop(context, {
+                          'id': category.id,
+                          'name': category.name,
+                          'icon': icon.iconPath,
+                        });
+                      },
+                      child: Container(
+                        decoration: BoxDecoration(
+                          color: Colors.grey[50],
+                          borderRadius: BorderRadius.circular(12),
+                          border: Border.all(
+                            color: Colors.grey[200]!,
+                            width: 1,
+                          ),
+                        ),
+                        child: Center(
+                          child: Text(
+                            icon.iconPath,
+                            style: const TextStyle(fontSize: 24),
+                          ),
+                        ),
+                      ),
+                    );
+                  },
+                ),
+              ),
+            ],
           ),
         );
       }).toList(),
+    );
+  }
+
+  Future<void> _showDeleteDialog(Category category) async {
+    return showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(16),
+          ),
+          title: Text(
+            'Delete ${category.name}?',
+            style: const TextStyle(
+              fontSize: 18,
+              fontWeight: FontWeight.w600,
+            ),
+          ),
+          content: Text(
+            'Are you sure you want to delete this category? This action cannot be undone.',
+            style: TextStyle(
+              color: Colors.grey[700],
+              fontSize: 14,
+            ),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(context).pop(),
+              child: Text(
+                'Cancel',
+                style: TextStyle(
+                  color: Colors.grey[700],
+                  fontWeight: FontWeight.w500,
+                ),
+              ),
+            ),
+            TextButton(
+              onPressed: () {
+                context
+                    .read<CategoryProvider>()
+                    .deleteCategory(category.id ?? '');
+                Navigator.of(context).pop();
+              },
+              child: Text(
+                'Delete',
+                style: TextStyle(
+                  color: Colors.red[400],
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+            ),
+          ],
+        );
+      },
     );
   }
 }
