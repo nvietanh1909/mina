@@ -229,7 +229,6 @@ class AuthService {
         throw Exception(jsonData['message'] ?? 'Failed to upload avatar');
       }
     } catch (e) {
-      print('Upload error: $e'); // Debug log
       throw Exception('Failed to upload avatar: $e');
     }
   }
