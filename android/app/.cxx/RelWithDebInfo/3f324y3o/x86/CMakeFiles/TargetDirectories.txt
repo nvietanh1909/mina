@@ -1,0 +1,2 @@
+C:/Users/Admin/Flutter/mina/android/app/.cxx/RelWithDebInfo/3f324y3o/x86/CMakeFiles/edit_cache.dir
+C:/Users/Admin/Flutter/mina/android/app/.cxx/RelWithDebInfo/3f324y3o/x86/CMakeFiles/rebuild_cache.dir
