@@ -65,7 +65,7 @@ class _TransactionDetailScreenState extends State<TransactionDetailScreen> {
           icon: Container(
             padding: const EdgeInsets.all(8),
             decoration: BoxDecoration(
-              color: Colors.white.withOpacity(0.9),
+              color: Colors.white.withOpacity(0.4),
               shape: BoxShape.circle,
             ),
             child: const Icon(Icons.arrow_back_ios_new,
